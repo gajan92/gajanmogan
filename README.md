@@ -49,8 +49,8 @@ Repos and write-ups coming soon as I begin building and documenting.
 Pivoting from financial services to cybersecurity/technology, applying analytical skills, risk awareness, and stakeholder communication to security operations and tooling.
 
 ### Contact
-- LinkedIn: https://www.linkedin.com/in/your-handle
-- Email: youremail@example.com
+- LinkedIn: https://www.linkedin.com/in/gajan-mogan
+- Email: gajan92@gmail.com
 
 ### Quote / Motto
 “Security is a journey, not a destination.”
