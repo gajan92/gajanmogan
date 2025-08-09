@@ -22,11 +22,13 @@ Switching lanes from financial services to tech. I’m learning by building smal
 ![Bash](https://img.shields.io/badge/Bash-4EAA25?style=flat&logo=gnubash&logoColor=white)
 ![VS Code](https://img.shields.io/badge/VS%20Code-007ACC?style=flat&logo=visualstudiocode&logoColor=white)
 
-### Projects
-- LogSleuth — Python log analyzer to surface anomalies and IOCs. [Repo](#)
-- SwiftScan — asyncio-based network scanner with simple reporting. [Repo](#)
-- HeaderHawk — email header parser for phishing indicators. [Repo](#)
-- PacketPeek — Scapy mini sniffer for traffic patterns. [Repo](#)
+### Projects (Coming Soon)
+- LogSleuth — planned Python log analyzer to surface anomalies and IOCs
+- SwiftScan — planned asyncio-based network scanner with simple reporting
+- HeaderHawk — planned email header parser for phishing indicators
+- PacketPeek — planned Scapy mini sniffer for traffic patterns
+
+I’ll publish repos and write-ups here as I build them. 🚧
 
 ### Learning Roadmap & Progress Tracker
 - [x] Lay foundations: Linux, Git, networking basics

@@ -25,11 +25,13 @@ Transitioning from financial services into technology. Building practical Python
 ![Bash](https://img.shields.io/badge/Bash-4EAA25?style=flat&logo=gnubash&logoColor=white)
 ![VS Code](https://img.shields.io/badge/VS%20Code-007ACC?style=flat&logo=visualstudiocode&logoColor=white)
 
-### Projects (Relevant to Cybersecurity & Python)
-- Python Log Analyzer for SIEM Prep — parse auth and web logs, extract IOCs, basic alerts. [Repo](#)
-- Async Network Port Scanner — asyncio-based host/port enumeration with simple reporting. [Repo](#)
-- Phishing Email Header Analyzer — parse headers, detect anomalies, flag SPF/DKIM failures. [Repo](#)
-- Packet Sniffer (Scapy) — capture and classify basic traffic patterns for learning. [Repo](#)
+### Projects (Planned)
+- Python Log Analyzer for SIEM Prep — planned (parse auth and web logs, extract IOCs, basic alerts)
+- Async Network Port Scanner — planned (async host/port enumeration with simple reporting)
+- Phishing Email Header Analyzer — planned (parse headers, detect anomalies, flag SPF/DKIM failures)
+- Packet Sniffer (Scapy) — planned (capture and classify basic traffic patterns for learning)
+
+Repos and write-ups coming soon as I begin building and documenting.
 
 ### Learning Roadmap & Progress Tracker
 - [x] Complete Google IT Support (Coursera)
