@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Timer // Gajan Mogan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #111;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+      user-select: none;
+    }
+
+    /* ─── Container ─── */
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* ─── Mode Label ─── */
+    .mode-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #555;
+      transition: color 0.6s ease;
+    }
+
+    .mode-label.active {
+      color: var(--accent);
+    }
+
+    /* ─── Ring Wrapper ─── */
+    .ring-wrapper {
+      position: relative;
+      width: 240px;
+      height: 240px;
+    }
+
+    .ring-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg); /* start from top */
+    }
+
+    /* Background track ring */
+    .ring-track {
+      fill: none;
+      stroke: #1e1e1e;
+      stroke-width: 6;
+    }
+
+    /* Progress ring — animated */
+    .ring-progress {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 565.5;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1s linear, stroke 0.6s ease;
+      filter: drop-shadow(0 0 6px var(--accent));
+    }
+
+    /* Time display in center of ring */
+    .time-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .time-digits {
+      font-size: 3.2rem;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: #f0f0f0;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      line-height: 1;
+    }
+
+    .time-digits:hover {
+      color: var(--accent);
+    }
+
+    /* Hidden input for editing the time */
+    .time-input {
+      display: none;
+      font-size: 3.2rem;
+      font-weight: 300;
+      font-family: inherit;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--accent);
+      outline: none;
+      width: 120px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .time-hint {
+      font-size: 0.65rem;
+      color: #333;
+      margin-top: 0.4rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* ─── Session Dots ─── */
+    .session-dots {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #222;
+      border: 1px solid #333;
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .dot.filled {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+    }
+
+    /* ─── Cycle Info ─── */
+    .cycle-info {
+      font-size: 0.72rem;
+      color: #333;
+      letter-spacing: 0.08em;
+    }
+
+    /* ─── Controls ─── */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn {
+      background: transparent;
+      border: 1px solid #2a2a2a;
+      color: #888;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      padding: 0.6rem 1.6rem;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-primary {
+      border-color: var(--accent);
+      color: var(--accent);
+      font-size: 0.85rem;
+      padding: 0.7rem 2.2rem;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent);
+      color: #111;
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      margin-top: 1.5rem;
+      font-size: 0.65rem;
+      color: #2a2a2a;
+      letter-spacing: 0.08em;
+    }
+
+    /* ─── CSS Variable for accent color — changes per mode ─── */
+    :root {
+      --accent: #a0c4ff;
+    }
+
+    /* ─── Pulse animation when timer is running ─── */
+    @keyframes subtlePulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.7; }
+    }
+
+    .running .time-digits {
+      animation: subtlePulse 2s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container" id="app">
+
+    <!-- Mode label -->
+    <div class="mode-label active" id="modeLabel">FOCUS</div>
+
+    <!-- Countdown ring -->
+    <div class="ring-wrapper">
+      <svg class="ring-svg" viewBox="0 0 200 200">
+        <!-- Track (background circle) -->
+        <circle class="ring-track" cx="100" cy="100" r="90" />
+        <!-- Progress circle -->
+        <circle class="ring-progress" id="ringProgress" cx="100" cy="100" r="90" />
+      </svg>
+
+      <!-- Time shown in center -->
+      <div class="time-display">
+        <div class="time-digits" id="timeDigits">25:00</div>
+        <input class="time-input" id="timeInput" type="text" maxlength="5" />
+        <div class="time-hint" id="timeHint">click to edit</div>
+      </div>
+    </div>
+
+    <!-- Pomodoro session dots -->
+    <div class="session-dots" id="sessionDots">
+      <div class="dot" id="dot-0"></div>
+      <div class="dot" id="dot-1"></div>
+      <div class="dot" id="dot-2"></div>
+      <div class="dot" id="dot-3"></div>
+    </div>
+
+    <!-- Cycle info text -->
+    <div class="cycle-info" id="cycleInfo">Pomodoro 1 of 4</div>
+
+    <!-- Buttons -->
+    <div class="controls">
+      <button class="btn btn-primary" id="startBtn">START</button>
+      <button class="btn" id="resetBtn">RESET</button>
+    </div>
+
+    <footer>Built by Gajan Mogan</footer>
+
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────────
+    // 1. MODES
+    //    Each mode has a label, default duration in
+    //    minutes, and an accent color.
+    // ─────────────────────────────────────────────
+    const MODES = [
+      { label: 'FOCUS',       minutes: 25, color: '#a0c4ff' }, // blue
+      { label: 'SHORT BREAK', minutes: 5,  color: '#b9fbc0' }, // green
+      { label: 'LONG BREAK',  minutes: 15, color: '#ffd6a5' }  // warm orange
+    ];
+
+    // Circumference of the SVG ring (r=90)
+    const CIRCUMFERENCE = 2 * Math.PI * 90; // ≈ 565.5
+
+    // ─────────────────────────────────────────────
+    // 2. STATE
+    // ─────────────────────────────────────────────
+    let modeIndex      = 0;       // 0=focus, 1=short break, 2=long break
+    let pomodoroCount  = 0;       // how many focus sessions completed
+    let totalSeconds   = MODES[0].minutes * 60;
+    let secondsLeft    = totalSeconds;
+    let isRunning      = false;
+    let intervalId     = null;
+
+    // ─────────────────────────────────────────────
+    // 3. DOM REFERENCES
+    // ─────────────────────────────────────────────
+    const app         = document.getElementById('app');
+    const modeLabel   = document.getElementById('modeLabel');
+    const ringProgress= document.getElementById('ringProgress');
+    const timeDigits  = document.getElementById('timeDigits');
+    const timeInput   = document.getElementById('timeInput');
+    const timeHint    = document.getElementById('timeHint');
+    const sessionDots = document.querySelectorAll('.dot');
+    const cycleInfo   = document.getElementById('cycleInfo');
+    const startBtn    = document.getElementById('startBtn');
+    const resetBtn    = document.getElementById('resetBtn');
+
+    // ─────────────────────────────────────────────
+    // 4. RENDER — update the UI to match state
+    // ─────────────────────────────────────────────
+    function render() {
+      const mode = MODES[modeIndex];
+
+      // Accent color
+      document.documentElement.style.setProperty('--accent', mode.color);
+
+      // Mode label
+      modeLabel.textContent = mode.label;
+
+      // Time digits
+      timeDigits.textContent = formatTime(secondsLeft);
+
+      // Ring progress
+      // dashoffset 0 = full ring, CIRCUMFERENCE = empty ring
+      const fraction = secondsLeft / totalSeconds;
+      ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
+
+      // Session dots — fill one per completed focus session (max 4)
+      sessionDots.forEach((dot, i) => {
+        if (i < (pomodoroCount % 4 === 0 && pomodoroCount > 0 ? 4 : pomodoroCount % 4)) {
+          dot.classList.add('filled');
+        } else {
+          dot.classList.remove('filled');
+        }
+      });
+
+      // Cycle info
+      const focusNum = (pomodoroCount % 4) + (modeIndex === 0 ? 1 : 0);
+      cycleInfo.textContent = modeIndex === 0
+        ? `Pomodoro ${Math.min(focusNum, 4)} of 4`
+        : `${mode.label.toLowerCase()} · ${Math.ceil(pomodoroCount / 4)} cycle(s)`;
+
+      // Start button label
+      startBtn.textContent = isRunning ? 'PAUSE' : 'START';
+
+      // Running animation class
+      if (isRunning) {
+        app.classList.add('running');
+      } else {
+        app.classList.remove('running');
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // 5. FORMAT TIME — turns seconds into "MM:SS"
+    // ─────────────────────────────────────────────
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60).toString().padStart(2, '0');
+      const s = (secs % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    // ─────────────────────────────────────────────
+    // 6. CHIME — plays a soft tone via Web Audio API
+    //    No external audio files needed.
+    // ─────────────────────────────────────────────
+    function playChime() {
+      try {
+        const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+        const freqs = [528, 660, 792]; // three rising notes
+
+        freqs.forEach((freq, i) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const start = ctx.currentTime + i * 0.25;
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(0.25, start + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + 0.8);
+          osc.start(start);
+          osc.stop(start + 0.8);
+        });
+      } catch (e) {
+        // If Web Audio isn't supported, silently skip
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // 7. ADVANCE MODE — called when timer hits zero
+    // ─────────────────────────────────────────────
+    function advanceMode() {
+      if (modeIndex === 0) {
+        // Finished a focus session
+        pomodoroCount++;
+        // Every 4 focus sessions → long break, otherwise short break
+        modeIndex = (pomodoroCount % 4 === 0) ? 2 : 1;
+      } else {
+        // Finished a break → back to focus
+        modeIndex = 0;
+        // Clear dots after a long break cycle completes
+        if (pomodoroCount % 4 === 0) {
+          // dots will naturally reset since pomodoroCount % 4 === 0
+        }
+      }
+
+      totalSeconds = MODES[modeIndex].minutes * 60;
+      secondsLeft  = totalSeconds;
+
+      // Auto-start the next session
+      // (already running since we're called from tick())
+    }
+
+    // ─────────────────────────────────────────────
+    // 8. TICK — runs every second when timer is active
+    // ─────────────────────────────────────────────
+    function tick() {
+      secondsLeft--;
+
+      if (secondsLeft <= 0) {
+        secondsLeft = 0;
+        render();
+        playChime();
+        advanceMode();
+      }
+
+      render();
+    }
+
+    // ─────────────────────────────────────────────
+    // 9. START / PAUSE
+    // ─────────────────────────────────────────────
+    startBtn.addEventListener('click', function () {
+      if (isRunning) {
+        // Pause
+        clearInterval(intervalId);
+        intervalId = null;
+        isRunning  = false;
+      } else {
+        // Start
+        isRunning  = true;
+        intervalId = setInterval(tick, 1000);
+      }
+      render();
+    });
+
+    // ─────────────────────────────────────────────
+    // 10. RESET
+    // ─────────────────────────────────────────────
+    resetBtn.addEventListener('click', function () {
+      clearInterval(intervalId);
+      intervalId    = null;
+      isRunning     = false;
+      secondsLeft   = totalSeconds;
+      render();
+    });
+
+    // ─────────────────────────────────────────────
+    // 11. EDITABLE TIME — click digits to edit
+    // ─────────────────────────────────────────────
+    timeDigits.addEventListener('click', function () {
+      if (isRunning) return; // don't allow edit while running
+
+      timeDigits.style.display = 'none';
+      timeHint.style.display   = 'none';
+      timeInput.style.display  = 'block';
+      timeInput.value          = formatTime(secondsLeft);
+      timeInput.focus();
+      timeInput.select();
+    });
+
+    function commitEdit() {
+      const val = timeInput.value.trim();
+      let parsed = null;
+
+      // Accept "MM:SS" or just a number of minutes
+      if (/^\d{1,2}:\d{2}$/.test(val)) {
+        const parts = val.split(':');
+        parsed = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+      } else if (/^\d+$/.test(val)) {
+        parsed = parseInt(val, 10) * 60;
+      }
+
+      if (parsed && parsed > 0 && parsed <= 99 * 60) {
+        totalSeconds = parsed;
+        secondsLeft  = parsed;
+      }
+
+      timeInput.style.display  = 'none';
+      timeDigits.style.display = 'block';
+      timeHint.style.display   = 'block';
+      render();
+    }
+
+    timeInput.addEventListener('blur', commitEdit);
+    timeInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { timeInput.blur(); }
+      if (e.key === 'Escape') {
+        timeInput.style.display  = 'none';
+        timeDigits.style.display = 'block';
+        timeHint.style.display   = 'block';
+      }
+    });
+
+    // ─────────────────────────────────────────────
+    // 12. INIT — draw the initial state
+    // ─────────────────────────────────────────────
+    ringProgress.style.strokeDasharray = CIRCUMFERENCE;
+    render();
+  </script>
+
+</body>
+</html>
