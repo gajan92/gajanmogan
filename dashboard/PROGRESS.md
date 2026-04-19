@@ -24,7 +24,7 @@
 - Settings modal: open/close/save, durations, goal, project list
 - buildProjectDropdown() after save
 
-## Module 5 — Stats, Streaks & Milestones ⬜
+## Module 5 — Stats, Streaks & Milestones ✅
 - recordSession(), streak logic, checkMilestones(), showMilestone()
 - renderDashboard(), renderProjectsList()
 - Wire recordSession() into tick()

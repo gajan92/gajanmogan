@@ -999,13 +999,14 @@
         const wasFocus = modeIndex === 0;
         playChime();
         if (wasFocus) {
+          recordSession();
           sendNotification('Focus session complete!', 'Time for a break, Gajan.');
-          // recordSession() wired in Module 5
         } else {
           sendNotification('Break over!', 'Ready to focus again?');
         }
         advanceMode();
         render();
+        renderDashboard();
         return;
       }
       render();
@@ -1170,9 +1171,87 @@
       row.querySelector('input').focus();
     });
 
-    // ── RENDER DASHBOARD (stub — fully implemented in Module 5) ──
+    // ── MILESTONES ──
+    function showMilestone(msg) {
+      const el = document.getElementById('milestone-msg');
+      el.textContent = msg;
+      el.classList.add('visible');
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.remove('visible'), 7000);
+    }
+
+    function checkMilestones() {
+      const msgs = [];
+      if (dailyLog.count > 0 && dailyLog.count % 4 === 0)
+        msgs.push(`${dailyLog.count} sessions done — keep going, Gajan!`);
+      if (stats.streak.current === 3)  msgs.push('3 days in a row — building momentum!');
+      if (stats.streak.current === 7)  msgs.push("One full week — you're on fire!");
+      if (stats.streak.current === 30) msgs.push('30 days — this is a habit now.');
+      if (msgs.length) showMilestone(msgs[msgs.length - 1]);
+    }
+
+    // ── RECORD SESSION ──
+    function recordSession() {
+      const today     = todayStr();
+      const yesterday = offsetDate(-1);
+
+      if (dailyLog.date !== today) dailyLog = { date: today, count: 0 };
+      dailyLog.count++;
+
+      if (stats.streak.lastDate === today) {
+        // same day — no streak change
+      } else if (stats.streak.lastDate === yesterday) {
+        stats.streak.current++;
+      } else {
+        stats.streak.current = 1;
+      }
+      stats.streak.lastDate = today;
+      stats.streak.longest  = Math.max(stats.streak.longest, stats.streak.current);
+
+      stats.totalSessions++;
+      stats.totalMinutes += durations.focus;
+
+      const proj = projects.find(p => p.name === activeProject);
+      if (proj) proj.count++;
+
+      saveState();
+      checkMilestones();
+    }
+
+    // ── RENDER DASHBOARD ──
     function renderDashboard() {
-      document.getElementById('today-goal').textContent = dailyGoal;
+      document.getElementById('today-count').textContent = dailyLog.count;
+      document.getElementById('today-goal').textContent  = dailyGoal;
+      const pct = dailyGoal > 0 ? Math.min(100, (dailyLog.count / dailyGoal) * 100) : 0;
+      document.getElementById('goal-bar').style.width = pct + '%';
+
+      document.getElementById('total-sessions').textContent = stats.totalSessions;
+      document.getElementById('total-hours').textContent    =
+        (stats.totalMinutes / 60).toFixed(1) + 'h';
+
+      const cur = stats.streak.current;
+      const lng = stats.streak.longest;
+      document.getElementById('current-streak').textContent =
+        cur + (cur === 1 ? ' day' : ' days');
+      document.getElementById('longest-streak').textContent =
+        lng + (lng === 1 ? ' day' : ' days');
+
+      renderProjectsList();
+    }
+
+    function renderProjectsList() {
+      const container = document.getElementById('projects-list');
+      const total     = projects.reduce((s, p) => s + p.count, 0);
+      container.innerHTML = projects.map(p => {
+        const pct = total > 0 ? Math.round((p.count / total) * 100) : 0;
+        return `<div class="proj-row">
+          <span class="proj-name">${escapeHtml(p.name)}</span>
+          <div class="proj-bar-outer">
+            <div class="proj-bar-inner" style="width:${pct}%"></div>
+          </div>
+          <span class="proj-count">${p.count}</span>
+        </div>`;
+      }).join('');
     }
 
     // ── INIT ──
