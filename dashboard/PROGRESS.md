@@ -8,7 +8,7 @@
 - Responsive: 1-col < 640px, 2-col 640–959px, 3-col ≥ 960px
 - No JavaScript yet — static shell only
 
-## Module 2 — Timer Core ⬜
+## Module 2 — Timer Core ✅
 - Add `<script>` block with CIRCUMFERENCE, MODES array
 - State vars, formatTime, applyTheme, render, tick, advanceMode
 - Event listeners: START/PAUSE, RESET, mode tabs, project dropdown, editable time

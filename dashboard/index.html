@@ -781,7 +781,251 @@
   </div>
 
   <script>
-    // JS added in Module 2+
+    // ── CONSTANTS ──
+    const CIRCUMFERENCE = 2 * Math.PI * 95; // ≈ 597.6
+
+    const MODES = [
+      {
+        label:      'FOCUS',
+        bg:         '#0d0a00',
+        accent:     '#f59e0b',
+        accentGlow: 'rgba(245,158,11,0.45)',
+        gradStart:  '#f59e0b',
+        gradEnd:    '#fbbf24'
+      },
+      {
+        label:      'SHORT BREAK',
+        bg:         '#001a12',
+        accent:     '#34d399',
+        accentGlow: 'rgba(52,211,153,0.45)',
+        gradStart:  '#34d399',
+        gradEnd:    '#6ee7b7'
+      },
+      {
+        label:      'LONG BREAK',
+        bg:         '#1a0800',
+        accent:     '#fb923c',
+        accentGlow: 'rgba(251,146,60,0.45)',
+        gradStart:  '#fb923c',
+        gradEnd:    '#fcd34d'
+      }
+    ];
+
+    // ── DEFAULTS (overwritten by localStorage in Module 4) ──
+    let durations     = { focus: 25, short: 5, long: 15 };
+    let projects      = [
+      { name: 'Work',         count: 0 },
+      { name: 'Study',        count: 0 },
+      { name: 'Side Project', count: 0 },
+      { name: 'Admin',        count: 0 }
+    ];
+    let activeProject = 'Work';
+
+    // ── TIMER STATE ──
+    let modeIndex     = 0;
+    let pomodoroCount = 0;
+    let totalSeconds  = 0;
+    let secondsLeft   = 0;
+    let isRunning     = false;
+    let intervalId    = null;
+
+    // ── DOM REFS ──
+    const app          = document.getElementById('app');
+    const modeTabs     = document.querySelectorAll('.mode-tab');
+    const ringProgress = document.getElementById('ringProgress');
+    const gradStart    = document.getElementById('gradStart');
+    const gradEnd      = document.getElementById('gradEnd');
+    const timeDigits   = document.getElementById('timeDigits');
+    const timeInput    = document.getElementById('timeInput');
+    const timeHint     = document.getElementById('timeHint');
+    const sessionDots  = document.querySelectorAll('.dot');
+    const cycleInfo    = document.getElementById('cycleInfo');
+    const startBtn     = document.getElementById('startBtn');
+    const resetBtn     = document.getElementById('resetBtn');
+    const projectSel   = document.getElementById('project-select');
+
+    // ── HELPERS ──
+    function getModeMinutes(idx) {
+      return [durations.focus, durations.short, durations.long][idx];
+    }
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60).toString().padStart(2, '0');
+      const s = (secs % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function applyTheme(mode) {
+      document.documentElement.style.setProperty('--bg',          mode.bg);
+      document.documentElement.style.setProperty('--accent',      mode.accent);
+      document.documentElement.style.setProperty('--accent-glow', mode.accentGlow);
+      document.body.style.backgroundColor = mode.bg;
+      gradStart.setAttribute('stop-color', mode.gradStart);
+      gradEnd.setAttribute('stop-color',   mode.gradEnd);
+    }
+
+    function buildProjectDropdown() {
+      projectSel.innerHTML = projects.map(p =>
+        `<option value="${escapeHtml(p.name)}"${p.name === activeProject ? ' selected' : ''}>${escapeHtml(p.name)}</option>`
+      ).join('');
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── RENDER TIMER ──
+    function render() {
+      const mode     = MODES[modeIndex];
+      applyTheme(mode);
+
+      timeDigits.textContent = formatTime(secondsLeft);
+
+      const fraction = totalSeconds > 0 ? secondsLeft / totalSeconds : 1;
+      ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
+
+      modeTabs.forEach((tab, i) => tab.classList.toggle('active', i === modeIndex));
+
+      const filled = (pomodoroCount % 4 === 0 && pomodoroCount > 0) ? 4 : pomodoroCount % 4;
+      sessionDots.forEach((dot, i) => dot.classList.toggle('filled', i < filled));
+
+      const focusNum = modeIndex === 0 ? (pomodoroCount % 4) + 1 : pomodoroCount % 4;
+      cycleInfo.textContent = modeIndex === 0
+        ? `Pomodoro ${Math.min(focusNum, 4)} of 4`
+        : `${mode.label.toLowerCase()} · cycle ${Math.ceil(pomodoroCount / 4) || 1}`;
+
+      startBtn.textContent = isRunning ? 'PAUSE' : 'START';
+      app.classList.toggle('running', isRunning);
+      document.title = isRunning
+        ? `${formatTime(secondsLeft)} · ${mode.label}`
+        : "Gajan's Dashboard";
+    }
+
+    // ── ADVANCE MODE ──
+    function advanceMode() {
+      if (modeIndex === 0) {
+        pomodoroCount++;
+        modeIndex = (pomodoroCount % 4 === 0) ? 2 : 1;
+      } else {
+        modeIndex = 0;
+      }
+      totalSeconds = getModeMinutes(modeIndex) * 60;
+      secondsLeft  = totalSeconds;
+    }
+
+    // ── TICK ──
+    function tick() {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        secondsLeft = 0;
+        clearInterval(intervalId);
+        intervalId = null;
+        isRunning  = false;
+        const wasFocus = modeIndex === 0;
+        advanceMode();
+        render();
+        // Audio + notifications wired in Module 3
+        // Stats recording wired in Module 5
+        return;
+      }
+      render();
+    }
+
+    // ── CONTROLS ──
+    startBtn.addEventListener('click', () => {
+      if (isRunning) {
+        clearInterval(intervalId);
+        intervalId = null;
+        isRunning  = false;
+      } else {
+        isRunning  = true;
+        intervalId = setInterval(tick, 1000);
+      }
+      render();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(intervalId);
+      intervalId  = null;
+      isRunning   = false;
+      secondsLeft = totalSeconds;
+      render();
+    });
+
+    modeTabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => {
+        if (isRunning) return;
+        modeIndex    = i;
+        totalSeconds = getModeMinutes(i) * 60;
+        secondsLeft  = totalSeconds;
+        render();
+      });
+    });
+
+    projectSel.addEventListener('change', () => {
+      activeProject = projectSel.value;
+    });
+
+    // ── EDITABLE TIME ──
+    timeDigits.addEventListener('click', () => {
+      if (isRunning) return;
+      timeDigits.style.display = 'none';
+      timeHint.style.display   = 'none';
+      timeInput.style.display  = 'block';
+      timeInput.value          = formatTime(secondsLeft);
+      timeInput.focus();
+      timeInput.select();
+    });
+
+    function commitEdit() {
+      const val = timeInput.value.trim();
+      let parsed = null;
+      if (/^\d{1,2}:\d{2}$/.test(val)) {
+        const [m, s] = val.split(':');
+        parsed = parseInt(m, 10) * 60 + parseInt(s, 10);
+      } else if (/^\d+$/.test(val)) {
+        parsed = parseInt(val, 10) * 60;
+      }
+      if (parsed && parsed > 0 && parsed <= 99 * 60) {
+        totalSeconds = parsed;
+        secondsLeft  = parsed;
+      }
+      timeInput.style.display  = 'none';
+      timeDigits.style.display = 'block';
+      timeHint.style.display   = 'block';
+      render();
+    }
+
+    timeInput.addEventListener('blur', commitEdit);
+    timeInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  timeInput.blur();
+      if (e.key === 'Escape') {
+        timeInput.style.display  = 'none';
+        timeDigits.style.display = 'block';
+        timeHint.style.display   = 'block';
+      }
+    });
+
+    // ── SETTINGS MODAL (shell — wired fully in Module 4) ──
+    document.getElementById('settings-btn').addEventListener('click', () => {
+      document.getElementById('settings-modal').classList.remove('hidden');
+    });
+    document.getElementById('close-settings-btn').addEventListener('click', () => {
+      document.getElementById('settings-modal').classList.add('hidden');
+    });
+    document.getElementById('settings-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('settings-modal'))
+        document.getElementById('settings-modal').classList.add('hidden');
+    });
+
+    // ── INIT ──
+    ringProgress.style.strokeDasharray = CIRCUMFERENCE;
+    totalSeconds = getModeMinutes(0) * 60;
+    secondsLeft  = totalSeconds;
+    buildProjectDropdown();
+    render();
   </script>
 
 </body>
