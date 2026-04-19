@@ -29,7 +29,7 @@
 - renderDashboard(), renderProjectsList()
 - Wire recordSession() into tick()
 
-## Module 6 — Quotes API ⬜
+## Module 6 — Quotes API ✅
 - fetchQuote() → zenquotes.io/api/random
 - Fallback: Gajan's own motto
 - Called on init

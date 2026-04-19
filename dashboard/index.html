@@ -1254,6 +1254,21 @@
       }).join('');
     }
 
+    // ── QUOTES ──
+    async function fetchQuote() {
+      try {
+        const res  = await fetch('https://zenquotes.io/api/random');
+        if (!res.ok) throw new Error();
+        const [{ q, a }] = await res.json();
+        document.getElementById('quote-text').textContent   = `"${q}"`;
+        document.getElementById('quote-author').textContent = `— ${a}`;
+      } catch {
+        document.getElementById('quote-text').textContent   =
+          '"Security is a journey, not a destination."';
+        document.getElementById('quote-author').textContent = '— Gajan Mogan';
+      }
+    }
+
     // ── INIT ──
     loadState();
     ringProgress.style.strokeDasharray = CIRCUMFERENCE;
@@ -1262,6 +1277,7 @@
     buildProjectDropdown();
     render();
     renderDashboard();
+    fetchQuote();
   </script>
 
 </body>
