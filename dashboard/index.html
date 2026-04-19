@@ -811,15 +811,53 @@
       }
     ];
 
-    // ── DEFAULTS (overwritten by localStorage in Module 4) ──
-    let durations     = { focus: 25, short: 5, long: 15 };
-    let projects      = [
-      { name: 'Work',         count: 0 },
-      { name: 'Study',        count: 0 },
-      { name: 'Side Project', count: 0 },
-      { name: 'Admin',        count: 0 }
-    ];
-    let activeProject = 'Work';
+    // ── PERSISTENT STATE ──
+    let durations;
+    let dailyGoal;
+    let projects;
+    let stats;
+    let dailyLog;
+    let activeProject;
+
+    function loadState() {
+      durations = JSON.parse(localStorage.getItem('gajan_durations') || 'null')
+        || { focus: 25, short: 5, long: 15 };
+      dailyGoal = parseInt(localStorage.getItem('gajan_daily_goal') || '8', 10);
+      projects  = JSON.parse(localStorage.getItem('gajan_projects') || 'null')
+        || [
+          { name: 'Work',         count: 0 },
+          { name: 'Study',        count: 0 },
+          { name: 'Side Project', count: 0 },
+          { name: 'Admin',        count: 0 }
+        ];
+      stats = JSON.parse(localStorage.getItem('gajan_stats') || 'null')
+        || { totalSessions: 0, totalMinutes: 0,
+             streak: { current: 0, longest: 0, lastDate: null } };
+      const rawLog = JSON.parse(localStorage.getItem('gajan_daily_log') || 'null');
+      const today  = todayStr();
+      dailyLog = (rawLog && rawLog.date === today) ? rawLog : { date: today, count: 0 };
+      activeProject = localStorage.getItem('gajan_active_project') || projects[0].name;
+    }
+
+    function saveState() {
+      localStorage.setItem('gajan_durations',       JSON.stringify(durations));
+      localStorage.setItem('gajan_daily_goal',      String(dailyGoal));
+      localStorage.setItem('gajan_projects',        JSON.stringify(projects));
+      localStorage.setItem('gajan_stats',           JSON.stringify(stats));
+      localStorage.setItem('gajan_daily_log',       JSON.stringify(dailyLog));
+      localStorage.setItem('gajan_active_project',  activeProject);
+    }
+
+    // ── DATE HELPERS ──
+    function todayStr() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function offsetDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
+    }
 
     // ── TIMER STATE ──
     let modeIndex     = 0;
@@ -1007,6 +1045,7 @@
 
     projectSel.addEventListener('change', () => {
       activeProject = projectSel.value;
+      saveState();
     });
 
     // ── EDITABLE TIME ──
@@ -1049,24 +1088,101 @@
       }
     });
 
-    // ── SETTINGS MODAL (shell — wired fully in Module 4) ──
-    document.getElementById('settings-btn').addEventListener('click', () => {
+    // ── SETTINGS MODAL ──
+    function openSettings() {
+      document.getElementById('s-focus').value = durations.focus;
+      document.getElementById('s-short').value = durations.short;
+      document.getElementById('s-long').value  = durations.long;
+      document.getElementById('s-goal').value  = dailyGoal;
+      renderSettingsProjects();
       document.getElementById('settings-modal').classList.remove('hidden');
-    });
-    document.getElementById('close-settings-btn').addEventListener('click', () => {
+    }
+
+    function closeSettings() {
       document.getElementById('settings-modal').classList.add('hidden');
-    });
+    }
+
+    function renderSettingsProjects() {
+      const container = document.getElementById('settings-projects-list');
+      container.innerHTML = '';
+      projects.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'settings-proj-row';
+        row.innerHTML = `
+          <input class="proj-input settings-input" value="${escapeHtml(p.name)}" placeholder="Project name" />
+          <button class="btn-icon remove-proj">✕</button>`;
+        row.querySelector('.remove-proj').addEventListener('click', () => row.remove());
+        container.appendChild(row);
+      });
+    }
+
+    function saveSettings() {
+      durations = {
+        focus: Math.max(1, parseInt(document.getElementById('s-focus').value, 10) || durations.focus),
+        short: Math.max(1, parseInt(document.getElementById('s-short').value, 10) || durations.short),
+        long:  Math.max(1, parseInt(document.getElementById('s-long').value,  10) || durations.long)
+      };
+      dailyGoal = Math.max(1, parseInt(document.getElementById('s-goal').value, 10) || dailyGoal);
+
+      const inputs = document.querySelectorAll('#settings-projects-list .proj-input');
+      const newProjects = [];
+      inputs.forEach(input => {
+        const name = input.value.trim();
+        if (name) {
+          const existing = projects.find(p => p.name === name);
+          newProjects.push({ name, count: existing ? existing.count : 0 });
+        }
+      });
+      if (newProjects.length > 0) {
+        projects = newProjects;
+        if (!projects.find(p => p.name === activeProject))
+          activeProject = projects[0].name;
+      }
+
+      if (!isRunning) {
+        totalSeconds = getModeMinutes(modeIndex) * 60;
+        secondsLeft  = totalSeconds;
+      }
+
+      buildProjectDropdown();
+      saveState();
+      closeSettings();
+      render();
+      renderDashboard();
+    }
+
+    document.getElementById('settings-btn').addEventListener('click', openSettings);
+    document.getElementById('close-settings-btn').addEventListener('click', closeSettings);
+    document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
     document.getElementById('settings-modal').addEventListener('click', e => {
-      if (e.target === document.getElementById('settings-modal'))
-        document.getElementById('settings-modal').classList.add('hidden');
+      if (e.target === document.getElementById('settings-modal')) closeSettings();
     });
 
+    document.getElementById('add-project-btn').addEventListener('click', () => {
+      const container = document.getElementById('settings-projects-list');
+      const row = document.createElement('div');
+      row.className = 'settings-proj-row';
+      row.innerHTML = `
+        <input class="proj-input settings-input" value="" placeholder="Project name" />
+        <button class="btn-icon remove-proj">✕</button>`;
+      row.querySelector('.remove-proj').addEventListener('click', () => row.remove());
+      container.appendChild(row);
+      row.querySelector('input').focus();
+    });
+
+    // ── RENDER DASHBOARD (stub — fully implemented in Module 5) ──
+    function renderDashboard() {
+      document.getElementById('today-goal').textContent = dailyGoal;
+    }
+
     // ── INIT ──
+    loadState();
     ringProgress.style.strokeDasharray = CIRCUMFERENCE;
     totalSeconds = getModeMinutes(0) * 60;
     secondsLeft  = totalSeconds;
     buildProjectDropdown();
     render();
+    renderDashboard();
   </script>
 
 </body>

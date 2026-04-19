@@ -19,7 +19,7 @@
 - requestNotifPermission(), sendNotification()
 - Wire into tick() on session complete
 
-## Module 4 — localStorage + Settings Modal ⬜
+## Module 4 — localStorage + Settings Modal ✅
 - loadState() / saveState()
 - Settings modal: open/close/save, durations, goal, project list
 - buildProjectDropdown() after save
