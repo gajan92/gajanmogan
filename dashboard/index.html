@@ -232,16 +232,16 @@
 
     .ring-track {
       fill: none;
-      stroke: rgba(255, 255, 255, 0.05);
-      stroke-width: 4;
+      stroke: rgba(255, 255, 255, 0.07);
+      stroke-width: 10;
     }
 
     .ring-progress {
       fill: none;
       stroke: url(#ringGradient);
-      stroke-width: 4;
+      stroke-width: 10;
       stroke-linecap: round;
-      stroke-dasharray: 597.6;
+      stroke-dasharray: 540;
       stroke-dashoffset: 0;
       transition: stroke-dashoffset 1s linear;
       filter: drop-shadow(0 0 8px var(--accent-glow))
@@ -702,8 +702,8 @@
               <stop id="gradEnd"   offset="100%" stop-color="#fbbf24" />
             </linearGradient>
           </defs>
-          <circle class="ring-track"    cx="100" cy="100" r="95" />
-          <circle class="ring-progress" cx="100" cy="100" r="95" id="ringProgress" />
+          <circle class="ring-track"    cx="100" cy="100" r="86" />
+          <circle class="ring-progress" cx="100" cy="100" r="86" id="ringProgress" />
         </svg>
         <div class="time-display">
           <div class="time-digits" id="timeDigits">25:00</div>
@@ -782,7 +782,7 @@
 
   <script>
     // ── CONSTANTS ──
-    const CIRCUMFERENCE = 2 * Math.PI * 95; // ≈ 597.6
+    const CIRCUMFERENCE = 2 * Math.PI * 86; // ≈ 540.4
 
     const MODES = [
       {
