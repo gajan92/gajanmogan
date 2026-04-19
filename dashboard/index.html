@@ -915,6 +915,41 @@
       secondsLeft  = totalSeconds;
     }
 
+    // ── AUDIO ──
+    function playChime() {
+      try {
+        const ctx   = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [528, 660, 792];
+        notes.forEach((freq, i) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const t = ctx.currentTime + i * 0.28;
+          gain.gain.setValueAtTime(0, t);
+          gain.gain.linearRampToValueAtTime(0.22, t + 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+          osc.start(t);
+          osc.stop(t + 1.0);
+        });
+      } catch (e) {}
+    }
+
+    // ── NOTIFICATIONS ──
+    async function requestNotifPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+    }
+
+    function sendNotification(title, body) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, { body });
+      }
+    }
+
     // ── TICK ──
     function tick() {
       secondsLeft--;
@@ -924,17 +959,23 @@
         intervalId = null;
         isRunning  = false;
         const wasFocus = modeIndex === 0;
+        playChime();
+        if (wasFocus) {
+          sendNotification('Focus session complete!', 'Time for a break, Gajan.');
+          // recordSession() wired in Module 5
+        } else {
+          sendNotification('Break over!', 'Ready to focus again?');
+        }
         advanceMode();
         render();
-        // Audio + notifications wired in Module 3
-        // Stats recording wired in Module 5
         return;
       }
       render();
     }
 
     // ── CONTROLS ──
-    startBtn.addEventListener('click', () => {
+    startBtn.addEventListener('click', async () => {
+      if (!isRunning) await requestNotifPermission();
       if (isRunning) {
         clearInterval(intervalId);
         intervalId = null;

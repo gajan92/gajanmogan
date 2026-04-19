@@ -14,7 +14,7 @@
 - Event listeners: START/PAUSE, RESET, mode tabs, project dropdown, editable time
 - Hard-coded defaults only (no localStorage yet)
 
-## Module 3 — Audio + Notifications ⬜
+## Module 3 — Audio + Notifications ✅
 - playChime() (Web Audio API, 528/660/792 Hz)
 - requestNotifPermission(), sendNotification()
 - Wire into tick() on session complete
