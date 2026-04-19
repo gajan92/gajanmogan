@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gajan's Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0d0a00;
+      --accent:       #f59e0b;
+      --accent-glow:  rgba(245, 158, 11, 0.45);
+      --text:         #f5f0e8;
+      --text-muted:   rgba(245, 240, 232, 0.35);
+      --card-bg:      rgba(255, 255, 255, 0.03);
+      --card-border:  rgba(245, 158, 11, 0.12);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem 5rem;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background-color: var(--bg);
+      transition: background-color 1.8s ease;
+      overflow-x: hidden;
+    }
+
+    /* Gradient depth overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(255,255,255,0.02) 0%, transparent 70%),
+        radial-gradient(ellipse 100% 100% at 50% 100%, rgba(0,0,0,0.5) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Vignette */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Film grain */
+    #grain {
+      position: fixed;
+      inset: -100%;
+      width: 300%;
+      height: 300%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      opacity: 0.055;
+      pointer-events: none;
+      z-index: 3;
+      animation: grain 0.4s steps(1) infinite;
+    }
+
+    @keyframes grain {
+      0%   { transform: translate(0,    0  ); }
+      10%  { transform: translate(-4%, -6% ); }
+      20%  { transform: translate(-8%,  4% ); }
+      30%  { transform: translate( 4%, -8% ); }
+      40%  { transform: translate(-4%, 12% ); }
+      50%  { transform: translate(-8%,  4% ); }
+      60%  { transform: translate(12%,  0% ); }
+      70%  { transform: translate( 0%,  8% ); }
+      80%  { transform: translate(-12%, 0% ); }
+      90%  { transform: translate( 8%,  4% ); }
+      100% { transform: translate( 4%,  0% ); }
+    }
+
+    /* ── App container ── */
+    #app {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .greeting {
+      font-size: 1.4rem;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.4rem;
+      border-radius: 4px;
+      transition: color 0.2s ease;
+      line-height: 1;
+    }
+    .btn-icon:hover { color: var(--accent); }
+
+    /* ── Quote bar ── */
+    #quote-bar {
+      text-align: center;
+      padding: 0.85rem 1.5rem;
+      border-radius: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+
+    #quote-text {
+      font-size: 0.78rem;
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(245, 240, 232, 0.5);
+      line-height: 1.65;
+    }
+
+    #quote-author {
+      display: block;
+      font-size: 0.66rem;
+      color: rgba(245, 240, 232, 0.25);
+      margin-top: 0.4rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Timer section ── */
+    #timer-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 2rem 1rem 2.2rem;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      user-select: none;
+    }
+
+    /* ── Mode tabs ── */
+    #mode-tabs {
+      display: flex;
+      gap: 0.3rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 0.3rem;
+    }
+
+    .mode-tab {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.63rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      padding: 0.45rem 0.85rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .mode-tab:hover { color: rgba(245, 240, 232, 0.65); }
+    .mode-tab.active {
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--accent);
+    }
+
+    /* ── Project row ── */
+    #project-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .project-label {
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    #project-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      color: rgba(245, 240, 232, 0.75);
+      font-family: inherit;
+      font-size: 0.7rem;
+      padding: 0.3rem 0.55rem;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s ease;
+      user-select: auto;
+    }
+    #project-select:hover,
+    #project-select:focus  { border-color: var(--accent); }
+    #project-select option { background: #1a1400; }
+
+    /* ── Ring ── */
+    .ring-wrapper {
+      position: relative;
+      width: 220px;
+      height: 220px;
+    }
+
+    .ring-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+      overflow: visible;
+    }
+
+    .ring-track {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 4;
+    }
+
+    .ring-progress {
+      fill: none;
+      stroke: url(#ringGradient);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 597.6;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1s linear;
+      filter: drop-shadow(0 0 8px var(--accent-glow))
+              drop-shadow(0 0 24px var(--accent-glow));
+    }
+
+    /* ── Time display ── */
+    .time-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .time-digits {
+      font-size: 3.4rem;
+      font-weight: 200;
+      letter-spacing: -0.03em;
+      color: rgba(255, 255, 255, 0.92);
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+    .time-digits:hover {
+      color: #fff;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+
+    .time-input {
+      display: none;
+      font-size: 3.4rem;
+      font-weight: 200;
+      font-family: inherit;
+      letter-spacing: -0.03em;
+      color: var(--accent);
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--accent);
+      outline: none;
+      width: 130px;
+      text-align: center;
+    }
+
+    .time-hint {
+      font-size: 0.58rem;
+      color: rgba(255, 255, 255, 0.15);
+      margin-top: 0.45rem;
+      letter-spacing: 0.1em;
+    }
+
+    .running .time-digits {
+      animation: breathe 4s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { opacity: 0.92; }
+      50%       { opacity: 0.6;  }
+    }
+
+    /* ── Session dots ── */
+    .session-dots {
+      display: flex;
+      gap: 0.7rem;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.4s ease;
+    }
+    .dot.filled {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .cycle-info {
+      font-size: 0.63rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(245, 240, 232, 0.45);
+      font-family: inherit;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      padding: 0.65rem 1.4rem;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: rgba(245, 240, 232, 0.8);
+    }
+
+    .btn-primary {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-size: 0.76rem;
+      padding: 0.7rem 2.2rem;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .btn-primary:hover {
+      background: var(--accent);
+      color: #1a0e00;
+      box-shadow: 0 0 28px var(--accent-glow);
+    }
+
+    .btn-sm {
+      font-size: 0.63rem;
+      padding: 0.4rem 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Dashboard grid ── */
+    #dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .card-title {
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--accent);
+      opacity: 0.65;
+    }
+
+    /* Today card */
+    .goal-display {
+      display: flex;
+      align-items: baseline;
+      gap: 0.3rem;
+    }
+
+    #today-count {
+      font-size: 2.6rem;
+      font-weight: 200;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .goal-sep    { font-size: 1.3rem; color: var(--text-muted); }
+    #today-goal  { font-size: 1.3rem; color: var(--text-muted); }
+    .goal-unit   {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      margin-left: 0.2rem;
+    }
+
+    .progress-track {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.6s ease;
+      box-shadow: 0 0 6px var(--accent-glow);
+    }
+
+    .milestone-msg {
+      font-size: 0.68rem;
+      color: var(--accent);
+      min-height: 1em;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      line-height: 1.5;
+    }
+    .milestone-msg.visible { opacity: 1; }
+
+    /* Stats card */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.73rem;
+    }
+    .stat-label { color: var(--text-muted); }
+    .stat-value { color: var(--text); font-weight: 400; }
+
+    /* Projects card */
+    .proj-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.7rem;
+    }
+    .proj-name {
+      width: 88px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 0;
+    }
+    .proj-bar-outer {
+      flex: 1;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .proj-bar-inner {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+    .proj-count {
+      width: 22px;
+      text-align: right;
+      color: rgba(245, 240, 232, 0.4);
+      flex-shrink: 0;
+    }
+
+    /* ── Settings modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+    .modal-overlay.hidden { display: none; }
+
+    .modal-box {
+      background: #1a1400;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 460px;
+      max-height: 85vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem 0;
+    }
+    .modal-header h2 {
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .modal-body {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    .settings-section h3 {
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(245, 240, 232, 0.3);
+      margin-bottom: 0.7rem;
+    }
+
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.55rem;
+    }
+    .settings-row label {
+      font-size: 0.73rem;
+      color: rgba(245, 240, 232, 0.55);
+    }
+
+    .settings-input {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.73rem;
+      padding: 0.35rem 0.6rem;
+      width: 72px;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .settings-input:focus { border-color: var(--accent); }
+
+    #settings-projects-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .settings-proj-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .settings-proj-row .proj-input {
+      flex: 1;
+      width: auto;
+      text-align: left;
+    }
+
+    .modal-footer {
+      padding: 0.75rem 1.5rem 1.5rem;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* ── Footer ── */
+    footer {
+      font-size: 0.58rem;
+      color: rgba(255, 255, 255, 0.1);
+      letter-spacing: 0.12em;
+      text-align: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 639px) {
+      #dashboard-grid          { grid-template-columns: 1fr; }
+      .ring-wrapper            { width: 190px; height: 190px; }
+      .time-digits             { font-size: 3rem; }
+      .time-input              { font-size: 3rem; width: 115px; }
+      .greeting                { font-size: 1.2rem; }
+      #mode-tabs               { flex-wrap: wrap; justify-content: center; }
+    }
+
+    @media (min-width: 640px) and (max-width: 959px) {
+      #dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="grain"></div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button class="btn-icon" id="close-settings-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <section class="settings-section">
+          <h3>Durations (minutes)</h3>
+          <div class="settings-row">
+            <label for="s-focus">Focus</label>
+            <input type="number" id="s-focus" class="settings-input" min="1" max="99" />
+          </div>
+          <div class="settings-row">
+            <label for="s-short">Short Break</label>
+            <input type="number" id="s-short" class="settings-input" min="1" max="99" />
+          </div>
+          <div class="settings-row">
+            <label for="s-long">Long Break</label>
+            <input type="number" id="s-long" class="settings-input" min="1" max="99" />
+          </div>
+        </section>
+        <section class="settings-section">
+          <h3>Daily Goal</h3>
+          <div class="settings-row">
+            <label for="s-goal">Pomodoros / day</label>
+            <input type="number" id="s-goal" class="settings-input" min="1" max="50" />
+          </div>
+        </section>
+        <section class="settings-section">
+          <h3>Projects</h3>
+          <div id="settings-projects-list"></div>
+          <button class="btn btn-sm" id="add-project-btn">+ Add Project</button>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="save-settings-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app">
+
+    <header>
+      <div class="greeting">Hey, Gajan</div>
+      <button class="btn-icon" id="settings-btn" title="Settings">⚙</button>
+    </header>
+
+    <div id="quote-bar">
+      <p id="quote-text">Loading inspiration...</p>
+      <span id="quote-author"></span>
+    </div>
+
+    <section id="timer-section">
+
+      <div id="mode-tabs">
+        <button class="mode-tab active" data-mode="0">FOCUS</button>
+        <button class="mode-tab"        data-mode="1">SHORT BREAK</button>
+        <button class="mode-tab"        data-mode="2">LONG BREAK</button>
+      </div>
+
+      <div id="project-row">
+        <span class="project-label">Working on</span>
+        <select id="project-select"></select>
+      </div>
+
+      <div class="ring-wrapper">
+        <svg class="ring-svg" viewBox="0 0 200 200" overflow="visible">
+          <defs>
+            <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop id="gradStart" offset="0%"   stop-color="#f59e0b" />
+              <stop id="gradEnd"   offset="100%" stop-color="#fbbf24" />
+            </linearGradient>
+          </defs>
+          <circle class="ring-track"    cx="100" cy="100" r="95" />
+          <circle class="ring-progress" cx="100" cy="100" r="95" id="ringProgress" />
+        </svg>
+        <div class="time-display">
+          <div class="time-digits" id="timeDigits">25:00</div>
+          <input class="time-input" id="timeInput" type="text" maxlength="5" />
+          <div class="time-hint" id="timeHint">click to edit</div>
+        </div>
+      </div>
+
+      <div class="session-dots">
+        <div class="dot" id="dot-0"></div>
+        <div class="dot" id="dot-1"></div>
+        <div class="dot" id="dot-2"></div>
+        <div class="dot" id="dot-3"></div>
+      </div>
+
+      <div class="cycle-info" id="cycleInfo">Pomodoro 1 of 4</div>
+
+      <div class="controls">
+        <button class="btn btn-primary" id="startBtn">START</button>
+        <button class="btn"             id="resetBtn">RESET</button>
+      </div>
+
+    </section>
+
+    <div id="dashboard-grid">
+
+      <!-- Today card -->
+      <div class="card" id="today-card">
+        <div class="card-title">Today</div>
+        <div class="goal-display">
+          <span id="today-count">0</span>
+          <span class="goal-sep">/</span>
+          <span id="today-goal">8</span>
+          <span class="goal-unit">sessions</span>
+        </div>
+        <div class="progress-track">
+          <div id="goal-bar" class="progress-fill"></div>
+        </div>
+        <p id="milestone-msg" class="milestone-msg"></p>
+      </div>
+
+      <!-- All-time stats card -->
+      <div class="card" id="stats-card">
+        <div class="card-title">All Time</div>
+        <div class="stat-row">
+          <span class="stat-label">Sessions</span>
+          <span class="stat-value" id="total-sessions">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Focus Hours</span>
+          <span class="stat-value" id="total-hours">0h</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Current Streak</span>
+          <span class="stat-value" id="current-streak">0 days</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Longest Streak</span>
+          <span class="stat-value" id="longest-streak">0 days</span>
+        </div>
+      </div>
+
+      <!-- Projects card -->
+      <div class="card" id="projects-card">
+        <div class="card-title">Projects</div>
+        <div id="projects-list">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <footer>Built by Gajan Mogan</footer>
+
+  </div>
+
+  <script>
+    // ── CONSTANTS ──
+    const CIRCUMFERENCE = 2 * Math.PI * 95; // ≈ 597.6
+
+    const MODES = [
+      {
+        label:      'FOCUS',
+        bg:         '#0d0a00',
+        accent:     '#f59e0b',
+        accentGlow: 'rgba(245,158,11,0.45)',
+        gradStart:  '#f59e0b',
+        gradEnd:    '#fbbf24'
+      },
+      {
+        label:      'SHORT BREAK',
+        bg:         '#001a12',
+        accent:     '#34d399',
+        accentGlow: 'rgba(52,211,153,0.45)',
+        gradStart:  '#34d399',
+        gradEnd:    '#6ee7b7'
+      },
+      {
+        label:      'LONG BREAK',
+        bg:         '#1a0800',
+        accent:     '#fb923c',
+        accentGlow: 'rgba(251,146,60,0.45)',
+        gradStart:  '#fb923c',
+        gradEnd:    '#fcd34d'
+      }
+    ];
+
+    // ── PERSISTENT STATE ──
+    let durations;
+    let dailyGoal;
+    let projects;
+    let stats;
+    let dailyLog;
+    let activeProject;
+
+    function loadState() {
+      durations = JSON.parse(localStorage.getItem('gajan_durations') || 'null')
+        || { focus: 25, short: 5, long: 15 };
+      dailyGoal = parseInt(localStorage.getItem('gajan_daily_goal') || '8', 10);
+      projects  = JSON.parse(localStorage.getItem('gajan_projects') || 'null')
+        || [
+          { name: 'Work',         count: 0 },
+          { name: 'Study',        count: 0 },
+          { name: 'Side Project', count: 0 },
+          { name: 'Admin',        count: 0 }
+        ];
+      stats = JSON.parse(localStorage.getItem('gajan_stats') || 'null')
+        || { totalSessions: 0, totalMinutes: 0,
+             streak: { current: 0, longest: 0, lastDate: null } };
+      const rawLog = JSON.parse(localStorage.getItem('gajan_daily_log') || 'null');
+      const today  = todayStr();
+      dailyLog = (rawLog && rawLog.date === today) ? rawLog : { date: today, count: 0 };
+      activeProject = localStorage.getItem('gajan_active_project') || projects[0].name;
+    }
+
+    function saveState() {
+      localStorage.setItem('gajan_durations',       JSON.stringify(durations));
+      localStorage.setItem('gajan_daily_goal',      String(dailyGoal));
+      localStorage.setItem('gajan_projects',        JSON.stringify(projects));
+      localStorage.setItem('gajan_stats',           JSON.stringify(stats));
+      localStorage.setItem('gajan_daily_log',       JSON.stringify(dailyLog));
+      localStorage.setItem('gajan_active_project',  activeProject);
+    }
+
+    // ── DATE HELPERS ──
+    function todayStr() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function offsetDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
+    }
+
+    // ── TIMER STATE ──
+    let modeIndex     = 0;
+    let pomodoroCount = 0;
+    let totalSeconds  = 0;
+    let secondsLeft   = 0;
+    let isRunning     = false;
+    let intervalId    = null;
+
+    // ── DOM REFS ──
+    const app          = document.getElementById('app');
+    const modeTabs     = document.querySelectorAll('.mode-tab');
+    const ringProgress = document.getElementById('ringProgress');
+    const gradStart    = document.getElementById('gradStart');
+    const gradEnd      = document.getElementById('gradEnd');
+    const timeDigits   = document.getElementById('timeDigits');
+    const timeInput    = document.getElementById('timeInput');
+    const timeHint     = document.getElementById('timeHint');
+    const sessionDots  = document.querySelectorAll('.dot');
+    const cycleInfo    = document.getElementById('cycleInfo');
+    const startBtn     = document.getElementById('startBtn');
+    const resetBtn     = document.getElementById('resetBtn');
+    const projectSel   = document.getElementById('project-select');
+
+    // ── HELPERS ──
+    function getModeMinutes(idx) {
+      return [durations.focus, durations.short, durations.long][idx];
+    }
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60).toString().padStart(2, '0');
+      const s = (secs % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function applyTheme(mode) {
+      document.documentElement.style.setProperty('--bg',          mode.bg);
+      document.documentElement.style.setProperty('--accent',      mode.accent);
+      document.documentElement.style.setProperty('--accent-glow', mode.accentGlow);
+      document.body.style.backgroundColor = mode.bg;
+      gradStart.setAttribute('stop-color', mode.gradStart);
+      gradEnd.setAttribute('stop-color',   mode.gradEnd);
+    }
+
+    function buildProjectDropdown() {
+      projectSel.innerHTML = projects.map(p =>
+        `<option value="${escapeHtml(p.name)}"${p.name === activeProject ? ' selected' : ''}>${escapeHtml(p.name)}</option>`
+      ).join('');
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── RENDER TIMER ──
+    function render() {
+      const mode     = MODES[modeIndex];
+      applyTheme(mode);
+
+      timeDigits.textContent = formatTime(secondsLeft);
+
+      const fraction = totalSeconds > 0 ? secondsLeft / totalSeconds : 1;
+      ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
+
+      modeTabs.forEach((tab, i) => tab.classList.toggle('active', i === modeIndex));
+
+      const filled = (pomodoroCount % 4 === 0 && pomodoroCount > 0) ? 4 : pomodoroCount % 4;
+      sessionDots.forEach((dot, i) => dot.classList.toggle('filled', i < filled));
+
+      const focusNum = modeIndex === 0 ? (pomodoroCount % 4) + 1 : pomodoroCount % 4;
+      cycleInfo.textContent = modeIndex === 0
+        ? `Pomodoro ${Math.min(focusNum, 4)} of 4`
+        : `${mode.label.toLowerCase()} · cycle ${Math.ceil(pomodoroCount / 4) || 1}`;
+
+      startBtn.textContent = isRunning ? 'PAUSE' : 'START';
+      app.classList.toggle('running', isRunning);
+      document.title = isRunning
+        ? `${formatTime(secondsLeft)} · ${mode.label}`
+        : "Gajan's Dashboard";
+    }
+
+    // ── ADVANCE MODE ──
+    function advanceMode() {
+      if (modeIndex === 0) {
+        pomodoroCount++;
+        modeIndex = (pomodoroCount % 4 === 0) ? 2 : 1;
+      } else {
+        modeIndex = 0;
+      }
+      totalSeconds = getModeMinutes(modeIndex) * 60;
+      secondsLeft  = totalSeconds;
+    }
+
+    // ── AUDIO ──
+    function playChime() {
+      try {
+        const ctx   = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [528, 660, 792];
+        notes.forEach((freq, i) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const t = ctx.currentTime + i * 0.28;
+          gain.gain.setValueAtTime(0, t);
+          gain.gain.linearRampToValueAtTime(0.22, t + 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+          osc.start(t);
+          osc.stop(t + 1.0);
+        });
+      } catch (e) {}
+    }
+
+    // ── NOTIFICATIONS ──
+    async function requestNotifPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+    }
+
+    function sendNotification(title, body) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, { body });
+      }
+    }
+
+    // ── TICK ──
+    function tick() {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        secondsLeft = 0;
+        clearInterval(intervalId);
+        intervalId = null;
+        isRunning  = false;
+        const wasFocus = modeIndex === 0;
+        playChime();
+        if (wasFocus) {
+          recordSession();
+          sendNotification('Focus session complete!', 'Time for a break, Gajan.');
+        } else {
+          sendNotification('Break over!', 'Ready to focus again?');
+        }
+        advanceMode();
+        render();
+        renderDashboard();
+        return;
+      }
+      render();
+    }
+
+    // ── CONTROLS ──
+    startBtn.addEventListener('click', async () => {
+      if (!isRunning) await requestNotifPermission();
+      if (isRunning) {
+        clearInterval(intervalId);
+        intervalId = null;
+        isRunning  = false;
+      } else {
+        isRunning  = true;
+        intervalId = setInterval(tick, 1000);
+      }
+      render();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(intervalId);
+      intervalId  = null;
+      isRunning   = false;
+      secondsLeft = totalSeconds;
+      render();
+    });
+
+    modeTabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => {
+        if (isRunning) return;
+        modeIndex    = i;
+        totalSeconds = getModeMinutes(i) * 60;
+        secondsLeft  = totalSeconds;
+        render();
+      });
+    });
+
+    projectSel.addEventListener('change', () => {
+      activeProject = projectSel.value;
+      saveState();
+    });
+
+    // ── EDITABLE TIME ──
+    timeDigits.addEventListener('click', () => {
+      if (isRunning) return;
+      timeDigits.style.display = 'none';
+      timeHint.style.display   = 'none';
+      timeInput.style.display  = 'block';
+      timeInput.value          = formatTime(secondsLeft);
+      timeInput.focus();
+      timeInput.select();
+    });
+
+    function commitEdit() {
+      const val = timeInput.value.trim();
+      let parsed = null;
+      if (/^\d{1,2}:\d{2}$/.test(val)) {
+        const [m, s] = val.split(':');
+        parsed = parseInt(m, 10) * 60 + parseInt(s, 10);
+      } else if (/^\d+$/.test(val)) {
+        parsed = parseInt(val, 10) * 60;
+      }
+      if (parsed && parsed > 0 && parsed <= 99 * 60) {
+        totalSeconds = parsed;
+        secondsLeft  = parsed;
+      }
+      timeInput.style.display  = 'none';
+      timeDigits.style.display = 'block';
+      timeHint.style.display   = 'block';
+      render();
+    }
+
+    timeInput.addEventListener('blur', commitEdit);
+    timeInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  timeInput.blur();
+      if (e.key === 'Escape') {
+        timeInput.style.display  = 'none';
+        timeDigits.style.display = 'block';
+        timeHint.style.display   = 'block';
+      }
+    });
+
+    // ── SETTINGS MODAL ──
+    function openSettings() {
+      document.getElementById('s-focus').value = durations.focus;
+      document.getElementById('s-short').value = durations.short;
+      document.getElementById('s-long').value  = durations.long;
+      document.getElementById('s-goal').value  = dailyGoal;
+      renderSettingsProjects();
+      document.getElementById('settings-modal').classList.remove('hidden');
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function renderSettingsProjects() {
+      const container = document.getElementById('settings-projects-list');
+      container.innerHTML = '';
+      projects.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'settings-proj-row';
+        row.innerHTML = `
+          <input class="proj-input settings-input" value="${escapeHtml(p.name)}" placeholder="Project name" />
+          <button class="btn-icon remove-proj">✕</button>`;
+        row.querySelector('.remove-proj').addEventListener('click', () => row.remove());
+        container.appendChild(row);
+      });
+    }
+
+    function saveSettings() {
+      durations = {
+        focus: Math.max(1, parseInt(document.getElementById('s-focus').value, 10) || durations.focus),
+        short: Math.max(1, parseInt(document.getElementById('s-short').value, 10) || durations.short),
+        long:  Math.max(1, parseInt(document.getElementById('s-long').value,  10) || durations.long)
+      };
+      dailyGoal = Math.max(1, parseInt(document.getElementById('s-goal').value, 10) || dailyGoal);
+
+      const inputs = document.querySelectorAll('#settings-projects-list .proj-input');
+      const newProjects = [];
+      inputs.forEach(input => {
+        const name = input.value.trim();
+        if (name) {
+          const existing = projects.find(p => p.name === name);
+          newProjects.push({ name, count: existing ? existing.count : 0 });
+        }
+      });
+      if (newProjects.length > 0) {
+        projects = newProjects;
+        if (!projects.find(p => p.name === activeProject))
+          activeProject = projects[0].name;
+      }
+
+      if (!isRunning) {
+        totalSeconds = getModeMinutes(modeIndex) * 60;
+        secondsLeft  = totalSeconds;
+      }
+
+      buildProjectDropdown();
+      saveState();
+      closeSettings();
+      render();
+      renderDashboard();
+    }
+
+    document.getElementById('settings-btn').addEventListener('click', openSettings);
+    document.getElementById('close-settings-btn').addEventListener('click', closeSettings);
+    document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
+    document.getElementById('settings-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('settings-modal')) closeSettings();
+    });
+
+    document.getElementById('add-project-btn').addEventListener('click', () => {
+      const container = document.getElementById('settings-projects-list');
+      const row = document.createElement('div');
+      row.className = 'settings-proj-row';
+      row.innerHTML = `
+        <input class="proj-input settings-input" value="" placeholder="Project name" />
+        <button class="btn-icon remove-proj">✕</button>`;
+      row.querySelector('.remove-proj').addEventListener('click', () => row.remove());
+      container.appendChild(row);
+      row.querySelector('input').focus();
+    });
+
+    // ── MILESTONES ──
+    function showMilestone(msg) {
+      const el = document.getElementById('milestone-msg');
+      el.textContent = msg;
+      el.classList.add('visible');
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.remove('visible'), 7000);
+    }
+
+    function checkMilestones() {
+      const msgs = [];
+      if (dailyLog.count > 0 && dailyLog.count % 4 === 0)
+        msgs.push(`${dailyLog.count} sessions done — keep going, Gajan!`);
+      if (stats.streak.current === 3)  msgs.push('3 days in a row — building momentum!');
+      if (stats.streak.current === 7)  msgs.push("One full week — you're on fire!");
+      if (stats.streak.current === 30) msgs.push('30 days — this is a habit now.');
+      if (msgs.length) showMilestone(msgs[msgs.length - 1]);
+    }
+
+    // ── RECORD SESSION ──
+    function recordSession() {
+      const today     = todayStr();
+      const yesterday = offsetDate(-1);
+
+      if (dailyLog.date !== today) dailyLog = { date: today, count: 0 };
+      dailyLog.count++;
+
+      if (stats.streak.lastDate === today) {
+        // same day — no streak change
+      } else if (stats.streak.lastDate === yesterday) {
+        stats.streak.current++;
+      } else {
+        stats.streak.current = 1;
+      }
+      stats.streak.lastDate = today;
+      stats.streak.longest  = Math.max(stats.streak.longest, stats.streak.current);
+
+      stats.totalSessions++;
+      stats.totalMinutes += durations.focus;
+
+      const proj = projects.find(p => p.name === activeProject);
+      if (proj) proj.count++;
+
+      saveState();
+      checkMilestones();
+    }
+
+    // ── RENDER DASHBOARD ──
+    function renderDashboard() {
+      document.getElementById('today-count').textContent = dailyLog.count;
+      document.getElementById('today-goal').textContent  = dailyGoal;
+      const pct = dailyGoal > 0 ? Math.min(100, (dailyLog.count / dailyGoal) * 100) : 0;
+      document.getElementById('goal-bar').style.width = pct + '%';
+
+      document.getElementById('total-sessions').textContent = stats.totalSessions;
+      document.getElementById('total-hours').textContent    =
+        (stats.totalMinutes / 60).toFixed(1) + 'h';
+
+      const cur = stats.streak.current;
+      const lng = stats.streak.longest;
+      document.getElementById('current-streak').textContent =
+        cur + (cur === 1 ? ' day' : ' days');
+      document.getElementById('longest-streak').textContent =
+        lng + (lng === 1 ? ' day' : ' days');
+
+      renderProjectsList();
+    }
+
+    function renderProjectsList() {
+      const container = document.getElementById('projects-list');
+      const total     = projects.reduce((s, p) => s + p.count, 0);
+      container.innerHTML = projects.map(p => {
+        const pct = total > 0 ? Math.round((p.count / total) * 100) : 0;
+        return `<div class="proj-row">
+          <span class="proj-name">${escapeHtml(p.name)}</span>
+          <div class="proj-bar-outer">
+            <div class="proj-bar-inner" style="width:${pct}%"></div>
+          </div>
+          <span class="proj-count">${p.count}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // ── QUOTES ──
+    async function fetchQuote() {
+      try {
+        const res  = await fetch('https://zenquotes.io/api/random');
+        if (!res.ok) throw new Error();
+        const [{ q, a }] = await res.json();
+        document.getElementById('quote-text').textContent   = `"${q}"`;
+        document.getElementById('quote-author').textContent = `— ${a}`;
+      } catch {
+        document.getElementById('quote-text').textContent   =
+          '"Security is a journey, not a destination."';
+        document.getElementById('quote-author').textContent = '— Gajan Mogan';
+      }
+    }
+
+    // ── INIT ──
+    loadState();
+    ringProgress.style.strokeDasharray = CIRCUMFERENCE;
+    totalSeconds = getModeMinutes(0) * 60;
+    secondsLeft  = totalSeconds;
+    buildProjectDropdown();
+    render();
+    renderDashboard();
+    fetchQuote();
+  </script>
+
+</body>
+</html>
