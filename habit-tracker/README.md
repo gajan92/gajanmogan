@@ -12,13 +12,17 @@ One file per month. Open it in Obsidian, update the blocks, read your progress a
 
 ## Updating a day
 
-Find the day's position in the row (left to right = day 1 to end of month) and change `·` to `▓` or `░`.
+Change `·` to `▓` or `░` for that day's row.
 
-## Stats (end of month)
+## Column headers
 
-- **%** — count `▓` blocks ÷ days in month × 100
-- **🔥 streak** — longest unbroken run of `▓` ending on the last day
+`[Do]` in the template = day of week abbreviation (Mo Tu We Th Fr Sa Su). Look up what day the 1st falls on for that month and fill them in.
+
+## Stats (update as you go or at month end)
+
+- **%** — count `▓` cells ÷ days in month × 100
+- **🔥 streak** — longest unbroken run of `▓` ending on the last completed day
 
 ## New month
 
-Copy `template.md`, rename it `YYYY-MM-monthname.md`, update the header, and adjust the dot count to match the number of days in that month (28 / 29 / 30 / 31).
+Copy `template.md`, rename it `YYYY-MM-monthname.md`, update the header, fill in the `[Do]` day abbreviations, and delete rows beyond the last day of that month.
