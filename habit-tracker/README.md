@@ -1,28 +1,20 @@
 # Habit Tracker
 
-One file per month. Open it in Obsidian, update the blocks, read your progress at a glance.
+One file per month. Stats at the top, daily log below.
 
-## Symbols
+## Daily log
 
-| Symbol | Meaning |
-|--------|---------|
-| `▓` | Done |
-| `░` | Missed |
-| `·` | Future / not yet |
+Enter `✓` for done, `—` for missed. Leave blank for future days.
+Replace `[Do]` in the template with the day of week (Mo Tu We Th Fr Sa Su).
 
-## Updating a day
+## Stats table
 
-Change `·` to `▓` or `░` for that day's row.
+Update as you go or at the end of each month.
 
-## Column headers
-
-`[Do]` in the template = day of week abbreviation (Mo Tu We Th Fr Sa Su). Look up what day the 1st falls on for that month and fill them in.
-
-## Stats (update as you go or at month end)
-
-- **%** — count `▓` cells ÷ days in month × 100
-- **🔥 streak** — longest unbroken run of `▓` ending on the last completed day
+- **🔥 Streak** — consecutive `✓` days ending today
+- **✅ Total** — count of `✓` across the month
+- **📊 %** — Total ÷ days elapsed × 100
 
 ## New month
 
-Copy `template.md`, rename it `YYYY-MM-monthname.md`, update the header, fill in the `[Do]` day abbreviations, and delete rows beyond the last day of that month.
+Copy `template.md` → `YYYY-MM-monthname.md`, update the header, fill in `[Do]` day abbreviations, delete rows past the last day of the month.
