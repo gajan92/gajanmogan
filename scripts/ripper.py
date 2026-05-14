@@ -30,14 +30,16 @@ def _common_args() -> list[str]:
 
 def fetch_metadata(url: str) -> dict:
     """
-    Run yt-dlp --dump-json with no download. No format selection — we only need metadata.
-    Raises RuntimeError with a human-readable message on failure.
+    Run yt-dlp --dump-json with no download.
+    Uses --ignore-no-formats-error so metadata can still be extracted even if
+    YouTube refuses to return playable formats (PO-token-gated content).
     """
     cmd = [
         "yt-dlp",
         "--dump-json",
         "--no-playlist",
         "--skip-download",
+        "--ignore-no-formats-error",
         "--no-warnings",
         *_common_args(),
         *_cookies_args(),
