@@ -93,8 +93,9 @@ def rebuild_feed(episodes_json_path: Path, output_path: Path, config: dict) -> N
         fe.podcast.itunes_duration(_parse_duration(ep["duration_seconds"]))
         fe.podcast.itunes_explicit("no")
 
-        if ep.get("thumbnail_url"):
-            fe.podcast.itunes_image(ep["thumbnail_url"])
+        thumbnail_url = ep.get("thumbnail_url", "")
+        if thumbnail_url and thumbnail_url.split("?")[0].lower().endswith((".jpg", ".png")):
+            fe.podcast.itunes_image(thumbnail_url)
 
         # Podcasting 2.0 chapters
         chapters = ep.get("chapters") or []
