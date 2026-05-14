@@ -55,4 +55,63 @@ Pivoting from financial services to cybersecurity/technology, applying analytica
 ### Quote / Motto
 “Security is a journey, not a destination.”
 
+---
 
+## YouTube → Podcast Pipeline
+
+Personal podcast feed from YouTube videos. Share a YouTube URL from iPhone or Mac → audio is extracted → episode appears in Pocket Casts via a custom RSS feed. Zero recurring cost, no server required.
+
+### How it works
+
+1. Share a YouTube URL via the iOS Shortcut below → a GitHub Issue is created with the URL as its title.
+2. GitHub Actions extracts the audio, uploads the MP3 to a GitHub Release, updates `feed/feed.xml`, and closes the issue.
+3. Pocket Casts (or any podcast client) refreshes and the episode appears — with chapters if the video has them.
+
+Visual-heavy content (tutorials, code-alongs, screencasts) is automatically skipped. Episodes expire after 14 days to keep storage minimal.
+
+### Setup
+
+**1. Enable GitHub Pages**
+
+Settings → Pages → Source: **Deploy from branch** → Branch: `main` → Folder: `/ (root)` → Save.
+
+Feed URL: `https://gajan92.github.io/gajanmogan/feed/feed.xml`
+
+**2. Create a Personal Access Token**
+
+github.com/settings/tokens → Generate new token (classic) → `repo` scope → copy it. This is used by the iOS Shortcut to create issues. The workflow uses the built-in `GITHUB_TOKEN` — no repo secrets needed.
+
+**3. Create the iOS Shortcut**
+
+1. Shortcuts app → **+** → Add Action → **Get Contents of URL**
+2. Configure:
+   - URL: `https://api.github.com/repos/gajan92/gajanmogan/issues`
+   - Method: **POST**
+   - Headers: `Authorization: Bearer <your-PAT>` · `Accept: application/vnd.github+json`
+   - Request Body: **JSON** → field `title` = **Shortcut Input**
+3. Rename to **Send to Podcast** → Settings → enable **Show in Share Sheet**
+
+To use: in YouTube, tap Share → **Send to Podcast**.
+
+**4. Subscribe in Pocket Casts**
+
+Add Podcast → By URL → `https://gajan92.github.io/gajanmogan/feed/feed.xml`
+
+### Customisation
+
+**Allow a channel to bypass the visual-heavy filter** — add the channel name to `data/allowlist.txt` (one per line, case-insensitive) and commit:
+
+```
+Lex Fridman Podcast
+Huberman Lab
+```
+
+**Change retention period** — set `RETENTION_DAYS` env var in the workflow (default: 14 days).
+
+### Dependency updates
+
+`yt-dlp` updates frequently. Check monthly:
+```bash
+pip install --upgrade yt-dlp && pip freeze | grep yt-dlp
+```
+Copy the new version into `requirements.txt`.

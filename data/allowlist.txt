@@ -1,0 +1,5 @@
+# Channel allowlist — one channel name per line (case-insensitive).
+# Channels listed here bypass the visual-heavy filter regardless of title/description keywords.
+# Example:
+#   Lex Fridman Podcast
+#   Huberman Lab

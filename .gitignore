@@ -1,0 +1,9 @@
+*.mp3
+audio/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.env
+*.egg-info/
+dist/

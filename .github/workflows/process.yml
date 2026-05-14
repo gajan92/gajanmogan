@@ -1,0 +1,82 @@
+name: process
+
+on:
+  issues:
+    types: [opened, reopened]
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  process:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate URL format
+        run: |
+          echo "${{ github.event.issue.title }}" | \
+          grep -qE '^https?://(www\.)?(youtube\.com/watch|youtu\.be/)' || \
+          { echo "Issue title is not a YouTube URL — skipping."; exit 0; }
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Process URL
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PYTHONPATH: scripts
+        run: |
+          python scripts/process_url.py \
+            --url "${{ github.event.issue.title }}" \
+            --issue-number "${{ github.event.issue.number }}" \
+            --repo "$REPO"
+
+      - name: Commit feed and metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add feed/ data/episodes.json
+          git diff --staged --quiet || git commit -m "Add episode (issue #${{ github.event.issue.number }})"
+          git push
+
+  purge:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run purge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PYTHONPATH: scripts
+        run: python scripts/purge.py
+
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add feed/ data/episodes.json
+          git diff --staged --quiet || git commit -m "Purge expired episodes"
+          git push
