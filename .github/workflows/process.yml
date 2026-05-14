@@ -53,6 +53,7 @@ jobs:
           REPO: ${{ github.repository }}
           PYTHONPATH: scripts
           YT_COOKIES_FILE: /tmp/yt_cookies.txt
+          YT_COOKIE_HEADER: ${{ secrets.YT_COOKIE_HEADER }}
         run: |
           python scripts/process_url.py \
             --url "${{ github.event.issue.title }}" \
