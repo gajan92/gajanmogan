@@ -22,6 +22,7 @@ def fetch_metadata(url: str) -> dict:
         "--dump-json",
         "--no-playlist",
         "--no-warnings",
+        "--extractor-args", "youtube:player_client=ios,tv_embedded",
         *_cookies_args(),
         url,
     ]
@@ -50,6 +51,7 @@ def rip(url: str, output_dir: Path) -> dict:
         "--embed-metadata",
         "--embed-thumbnail",
         "--no-playlist",
+        "--extractor-args", "youtube:player_client=ios,tv_embedded",
         *_cookies_args(),
         "--output", output_template,
         url,
