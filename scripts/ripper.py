@@ -8,9 +8,6 @@ def _cookies_args() -> list[str]:
     path = os.environ.get("YT_COOKIES_FILE", "")
     if path and Path(path).exists():
         return ["--cookies", path]
-    header = os.environ.get("YT_COOKIE_HEADER", "").strip()
-    if header:
-        return ["--add-header", f"Cookie:{header}"]
     return []
 
 

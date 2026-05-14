@@ -41,9 +41,25 @@ jobs:
       - name: Write YouTube cookies
         env:
           YT_COOKIES: ${{ secrets.YT_COOKIES }}
+          YT_COOKIE_HEADER: ${{ secrets.YT_COOKIE_HEADER }}
         run: |
           if [ -n "$YT_COOKIES" ]; then
             echo "$YT_COOKIES" > /tmp/yt_cookies.txt
+            chmod 600 /tmp/yt_cookies.txt
+          elif [ -n "$YT_COOKIE_HEADER" ]; then
+            python3 -c "
+import os
+header = os.environ['YT_COOKIE_HEADER']
+lines = ['# Netscape HTTP Cookie File']
+for pair in header.split(';'):
+    pair = pair.strip()
+    if '=' in pair:
+        name, _, value = pair.partition('=')
+        name = name.strip()
+        secure = 'TRUE' if name.startswith('__Secure-') or name.startswith('__Host-') else 'FALSE'
+        lines.append(f'.youtube.com\tTRUE\t/\t{secure}\t2147483647\t{name}\t{value}')
+print('\n'.join(lines))
+" > /tmp/yt_cookies.txt
             chmod 600 /tmp/yt_cookies.txt
           fi
 
