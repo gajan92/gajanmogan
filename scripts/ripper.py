@@ -8,8 +8,7 @@ MOBILE_UA = (
     "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 "
     "Mobile/15E148 Safari/604.1"
 )
-PLAYER_CLIENTS = "youtube:player_client=web_safari,default,mweb,tv_simply"
-AUDIO_FORMAT = "bestaudio[ext=m4a]/bestaudio/best"
+PLAYER_CLIENTS = "youtube:player_client=default,web_safari,mweb,tv_simply"
 
 
 def _cookies_args() -> list[str]:
@@ -31,15 +30,15 @@ def _common_args() -> list[str]:
 
 def fetch_metadata(url: str) -> dict:
     """
-    Run yt-dlp --dump-json with no download.
+    Run yt-dlp --dump-json with no download. No format selection — we only need metadata.
     Raises RuntimeError with a human-readable message on failure.
     """
     cmd = [
         "yt-dlp",
         "--dump-json",
         "--no-playlist",
+        "--skip-download",
         "--no-warnings",
-        "-f", AUDIO_FORMAT,
         *_common_args(),
         *_cookies_args(),
         url,
@@ -63,7 +62,7 @@ def rip(url: str, output_dir: Path) -> dict:
 
     cmd = [
         "yt-dlp",
-        "-f", AUDIO_FORMAT,
+        "-f", "bestaudio/best",
         "--extract-audio",
         "--audio-format", "mp3",
         "--audio-quality", "5",
