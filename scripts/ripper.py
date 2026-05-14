@@ -8,7 +8,8 @@ MOBILE_UA = (
     "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 "
     "Mobile/15E148 Safari/604.1"
 )
-PLAYER_CLIENTS = "youtube:player_client=mweb,web_safari,default,tv_simply"
+PLAYER_CLIENTS = "youtube:player_client=web_safari,default,mweb,tv_simply"
+AUDIO_FORMAT = "bestaudio[ext=m4a]/bestaudio/best"
 
 
 def _cookies_args() -> list[str]:
@@ -38,6 +39,7 @@ def fetch_metadata(url: str) -> dict:
         "--dump-json",
         "--no-playlist",
         "--no-warnings",
+        "-f", AUDIO_FORMAT,
         *_common_args(),
         *_cookies_args(),
         url,
@@ -61,6 +63,7 @@ def rip(url: str, output_dir: Path) -> dict:
 
     cmd = [
         "yt-dlp",
+        "-f", AUDIO_FORMAT,
         "--extract-audio",
         "--audio-format", "mp3",
         "--audio-quality", "5",
