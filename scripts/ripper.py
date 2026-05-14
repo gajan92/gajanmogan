@@ -3,12 +3,29 @@ import os
 import subprocess
 from pathlib import Path
 
+MOBILE_UA = (
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) "
+    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 "
+    "Mobile/15E148 Safari/604.1"
+)
+PLAYER_CLIENTS = "youtube:player_client=mweb,web_safari,default,tv_simply"
+
 
 def _cookies_args() -> list[str]:
     path = os.environ.get("YT_COOKIES_FILE", "")
     if path and Path(path).exists():
         return ["--cookies", path]
     return []
+
+
+def _common_args() -> list[str]:
+    return [
+        "--extractor-args", PLAYER_CLIENTS,
+        "--user-agent", MOBILE_UA,
+        "--retries", "5",
+        "--extractor-retries", "5",
+        "--sleep-requests", "1",
+    ]
 
 
 def fetch_metadata(url: str) -> dict:
@@ -21,10 +38,7 @@ def fetch_metadata(url: str) -> dict:
         "--dump-json",
         "--no-playlist",
         "--no-warnings",
-        "--extractor-args", "youtube:player_client=tv_simply,default,web_safari,mweb",
-        "--retries", "5",
-        "--extractor-retries", "5",
-        "--sleep-requests", "1",
+        *_common_args(),
         *_cookies_args(),
         url,
     ]
@@ -53,10 +67,7 @@ def rip(url: str, output_dir: Path) -> dict:
         "--embed-metadata",
         "--embed-thumbnail",
         "--no-playlist",
-        "--extractor-args", "youtube:player_client=tv_simply,default,web_safari,mweb",
-        "--retries", "5",
-        "--extractor-retries", "5",
-        "--sleep-requests", "1",
+        *_common_args(),
         *_cookies_args(),
         "--output", output_template,
         url,
