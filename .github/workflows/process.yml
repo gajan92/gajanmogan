@@ -15,6 +15,9 @@ concurrency:
   group: feed-update
   cancel-in-progress: false
 
+env:
+  FEED_TITLE: "Gajan's Listening Queue"
+
 jobs:
   process:
     if: github.event_name == 'issues'
