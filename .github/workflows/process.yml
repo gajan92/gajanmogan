@@ -34,11 +34,20 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Write YouTube cookies
+        if: ${{ secrets.YT_COOKIES != '' }}
+        env:
+          YT_COOKIES: ${{ secrets.YT_COOKIES }}
+        run: |
+          echo "$YT_COOKIES" > /tmp/yt_cookies.txt
+          chmod 600 /tmp/yt_cookies.txt
+
       - name: Process URL
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           PYTHONPATH: scripts
+          YT_COOKIES_FILE: /tmp/yt_cookies.txt
         run: |
           python scripts/process_url.py \
             --url "${{ github.event.issue.title }}" \

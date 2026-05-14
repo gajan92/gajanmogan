@@ -1,6 +1,15 @@
 import json
+import os
 import subprocess
 from pathlib import Path
+
+
+def _cookies_args() -> list[str]:
+    """Return yt-dlp cookie flags if YT_COOKIES_FILE env var points to a file."""
+    path = os.environ.get("YT_COOKIES_FILE", "")
+    if path and Path(path).exists():
+        return ["--cookies", path]
+    return []
 
 
 def fetch_metadata(url: str) -> dict:
@@ -13,6 +22,7 @@ def fetch_metadata(url: str) -> dict:
         "--dump-json",
         "--no-playlist",
         "--no-warnings",
+        *_cookies_args(),
         url,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -40,6 +50,7 @@ def rip(url: str, output_dir: Path) -> dict:
         "--embed-metadata",
         "--embed-thumbnail",
         "--no-playlist",
+        *_cookies_args(),
         "--output", output_template,
         url,
     ]
