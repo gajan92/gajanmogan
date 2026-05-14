@@ -46,21 +46,13 @@ jobs:
           if [ -n "$YT_COOKIES" ]; then
             echo "$YT_COOKIES" > /tmp/yt_cookies.txt
             chmod 600 /tmp/yt_cookies.txt
+            echo "Cookie file (YT_COOKIES): $(wc -l < /tmp/yt_cookies.txt) lines"
           elif [ -n "$YT_COOKIE_HEADER" ]; then
-            python3 -c "
-import os
-header = os.environ['YT_COOKIE_HEADER']
-lines = ['# Netscape HTTP Cookie File']
-for pair in header.split(';'):
-    pair = pair.strip()
-    if '=' in pair:
-        name, _, value = pair.partition('=')
-        name = name.strip()
-        secure = 'TRUE' if name.startswith('__Secure-') or name.startswith('__Host-') else 'FALSE'
-        lines.append(f'.youtube.com\tTRUE\t/\t{secure}\t2147483647\t{name}\t{value}')
-print('\n'.join(lines))
-" > /tmp/yt_cookies.txt
+            python3 scripts/write_cookies.py /tmp/yt_cookies.txt
             chmod 600 /tmp/yt_cookies.txt
+            echo "Cookie file (YT_COOKIE_HEADER): $(wc -l < /tmp/yt_cookies.txt) lines"
+          else
+            echo "No cookie secret set."
           fi
 
       - name: Process URL
@@ -69,7 +61,6 @@ print('\n'.join(lines))
           REPO: ${{ github.repository }}
           PYTHONPATH: scripts
           YT_COOKIES_FILE: /tmp/yt_cookies.txt
-          YT_COOKIE_HEADER: ${{ secrets.YT_COOKIE_HEADER }}
         run: |
           python scripts/process_url.py \
             --url "${{ github.event.issue.title }}" \
