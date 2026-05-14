@@ -35,12 +35,13 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Write YouTube cookies
-        if: ${{ secrets.YT_COOKIES != '' }}
         env:
           YT_COOKIES: ${{ secrets.YT_COOKIES }}
         run: |
-          echo "$YT_COOKIES" > /tmp/yt_cookies.txt
-          chmod 600 /tmp/yt_cookies.txt
+          if [ -n "$YT_COOKIES" ]; then
+            echo "$YT_COOKIES" > /tmp/yt_cookies.txt
+            chmod 600 /tmp/yt_cookies.txt
+          fi
 
       - name: Process URL
         env:
