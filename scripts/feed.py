@@ -96,22 +96,14 @@ def rebuild_feed(episodes_json_path: Path, output_path: Path, config: dict) -> N
         if ep.get("thumbnail_url"):
             fe.podcast.itunes_image(ep["thumbnail_url"])
 
-        # Podcasting 2.0 chapters
         chapters = ep.get("chapters") or []
         if chapters:
             _write_chapters_file(chapters, ep["video_id"], feed_dir)
-            chapters_url = ep.get("chapters_url", "")
-            if chapters_url:
-                fe.load_extension("dc")  # ensure DC extension doesn't conflict
-                # Add <podcast:chapters> as a custom element via feedgen's
-                # _FeedEntry.__dict__ injection isn't supported cleanly, so we
-                # store it and post-process the XML after rss_str().
-        # chapters_url is handled via post-processing below
 
     raw_xml = fg.rss_str(pretty=True)
 
-    # Inject podcast namespace declaration and <podcast:chapters> elements.
-    # feedgen doesn't natively support Podcasting 2.0, so we patch the XML.
+    # feedgen doesn't natively support Podcasting 2.0; patch the XML to add
+    # the xmlns:podcast namespace and <podcast:chapters> elements.
     raw_xml = _inject_podcast_chapters(raw_xml, sorted_episodes, config)
 
     output_path.write_bytes(raw_xml)
@@ -124,7 +116,6 @@ def _inject_podcast_chapters(raw_xml: bytes, episodes: list, config: dict) -> by
     """
     xml_str = raw_xml.decode("utf-8")
 
-    # Add namespace to <rss ...>
     if 'xmlns:podcast=' not in xml_str:
         xml_str = xml_str.replace(
             "<rss ",
@@ -132,7 +123,6 @@ def _inject_podcast_chapters(raw_xml: bytes, episodes: list, config: dict) -> by
             1,
         )
 
-    # Build a lookup: video_id -> chapters_url
     chapters_lookup = {
         ep["video_id"]: ep.get("chapters_url", "")
         for ep in episodes
@@ -142,14 +132,12 @@ def _inject_podcast_chapters(raw_xml: bytes, episodes: list, config: dict) -> by
     if not chapters_lookup:
         return xml_str.encode("utf-8")
 
-    # Insert <podcast:chapters> before </item> for matching episodes
     lines = xml_str.split("\n")
     result = []
     current_guid = None
     for line in lines:
         stripped = line.strip()
         if stripped.startswith("<guid"):
-            # Extract guid value
             start = stripped.find(">") + 1
             end = stripped.rfind("<")
             if start > 0 and end > start:
