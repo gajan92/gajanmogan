@@ -1,11 +1,38 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:podcast="https://podcastindex.org/namespace/1.0" version="2.0">
+<rss xmlns:podcast="https://podcastindex.org/namespace/1.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
   <channel>
-    <title>YouTube Podcast Feed</title>
-    <link>https://gajanmogan.github.io/gajanmogan/feed/feed.xml</link>
+    <title>gajan92's YouTube Podcast</title>
+    <link>https://gajan92.github.io/gajanmogan/feed/feed.xml</link>
     <description>Auto-generated audio podcast from curated YouTube videos</description>
+    <docs>http://www.rssboard.org/rss-specification</docs>
+    <generator>python-feedgen</generator>
     <language>en</language>
-    <itunes:author>gajanmogan</itunes:author>
+    <lastBuildDate>Thu, 14 May 2026 21:20:33 +0000</lastBuildDate>
+    <itunes:author>gajan92</itunes:author>
     <itunes:explicit>no</itunes:explicit>
+    <item>
+      <title>Trump seeks greater China cooperation, invites Xi to White House</title>
+      <description>U.S. President Donald Trump on Thursday said there was a chance to "create a future of greater prosperity, cooperation, and happiness" with China, during his visit to Beijing.
+ 
+During his speech, Trump also invited Xi to the White House for a visit on September 24.
+ 
+Meanwhile, Chinese President Xi Jinping described relations between China and the U.S. as "the most important bilateral relationship" and said that it "must not be messed up."
+ 
+Xi made the remarks in a toast at a state banquet he was hosting for visiting U.S. President Donald Trump at the Great Hall of the People in Beijing, adding that the “rejuvenation of China” and “making America great again” can go hand in hand.
+
+For more info, please go to https://globalnews.ca
+
+Subscribe to Global News Channel HERE: http://bit.ly/20fcXDc
+Follow Global News on X HERE: http://bit.ly/1Toz8mt
+Follow Global News on TikTok HERE: https://www.tiktok.com/@globalnews.ca?lang=en 
+
+#GlobalNews</description>
+      <guid isPermaLink="false">ueCi2K6oTFk</guid>
+      <enclosure url="https://github.com/gajan92/gajanmogan/releases/download/audio-2026-05/ueCi2K6oTFk.mp3" length="3017869" type="audio/mpeg"/>
+      <pubDate>Thu, 14 May 2026 21:20:33 +0000</pubDate>
+      <itunes:image href="https://i.ytimg.com/vi/ueCi2K6oTFk/maxresdefault.jpg"/>
+      <itunes:duration>00:03:10</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+    </item>
   </channel>
 </rss>
