@@ -99,10 +99,12 @@ def _load_episodes() -> list:
 
 def _save_episodes(episodes: list) -> None:
     EPISODES_PATH.parent.mkdir(parents=True, exist_ok=True)
-    EPISODES_PATH.write_text(
+    tmp = EPISODES_PATH.with_suffix(".json.tmp")
+    tmp.write_text(
         json.dumps(episodes, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    os.replace(tmp, EPISODES_PATH)
 
 
 def _build_feed_config(repo: str) -> dict:

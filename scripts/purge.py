@@ -123,10 +123,12 @@ def main():
         print("[purge] No expired episodes found.")
         return
 
-    EPISODES_PATH.write_text(
+    tmp = EPISODES_PATH.with_suffix(".json.tmp")
+    tmp.write_text(
         json.dumps(kept, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    os.replace(tmp, EPISODES_PATH)
     print(f"[purge] Purged {purged_count} episode(s). {len(kept)} remaining.")
 
     rebuild_feed(EPISODES_PATH, FEED_PATH, _build_feed_config(repo))
