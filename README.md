@@ -59,6 +59,8 @@ Pivoting from financial services to cybersecurity/technology, applying analytica
 
 ## YouTube → Podcast Pipeline
 
+![Pipeline](https://github.com/gajan92/gajanmogan/actions/workflows/process.yml/badge.svg)
+
 Personal podcast feed from YouTube videos. Share a YouTube URL from iPhone or Mac → audio is extracted → episode appears in Pocket Casts via a custom RSS feed. Zero recurring cost, no server required.
 
 ### How it works
@@ -107,6 +109,16 @@ Huberman Lab
 ```
 
 **Change retention period** — set `RETENTION_DAYS` env var in the workflow (default: 14 days).
+
+### When cookies expire
+
+YouTube will start rejecting downloads with a "Sign in to confirm you're not a bot" error every few weeks. When that happens:
+
+1. On iPhone, open **Proxyman** → start capturing.
+2. Open **Safari** and play any YouTube video (just tap play — a few seconds is enough).
+3. In Proxyman, find any `GET` request to `youtube.com` → tap it → **Request** tab → copy the full `Cookie:` header value.
+4. Go to your repo → **Settings → Secrets and variables → Actions** → update `YT_COOKIE_HEADER` with the copied value.
+5. Reopen the failed issue to retry.
 
 ### Dependency updates
 
