@@ -107,6 +107,7 @@ def _save_episodes(episodes: list) -> None:
 
 def _build_feed_config(repo: str) -> dict:
     owner, repo_name = repo.split("/", 1)
+    default_image = f"https://{owner}.github.io/{repo_name}/feed/cover.png"
     return {
         "title": os.environ.get("FEED_TITLE", f"{owner}'s YouTube Podcast"),
         "description": os.environ.get(
@@ -115,6 +116,7 @@ def _build_feed_config(repo: str) -> dict:
         "link": f"https://{owner}.github.io/{repo_name}/feed/feed.xml",
         "author": owner,
         "language": "en",
+        "image_url": os.environ.get("FEED_IMAGE_URL", default_image),
     }
 
 
