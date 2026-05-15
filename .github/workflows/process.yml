@@ -26,8 +26,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Validate URL format
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
-          echo "${{ github.event.issue.title }}" | \
+          echo "$ISSUE_TITLE" | \
           grep -qE '^https?://(www\.)?(youtube\.com/watch|youtu\.be/)' || \
           { echo "Issue title is not a YouTube URL — skipping."; exit 1; }
 
@@ -69,10 +71,12 @@ jobs:
           REPO: ${{ github.repository }}
           PYTHONPATH: scripts
           YT_COOKIES_FILE: /tmp/yt_cookies.txt
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           python scripts/process_url.py \
-            --url "${{ github.event.issue.title }}" \
-            --issue-number "${{ github.event.issue.number }}" \
+            --url "$ISSUE_TITLE" \
+            --issue-number "$ISSUE_NUMBER" \
             --repo "$REPO"
 
       - name: Commit feed and metadata
