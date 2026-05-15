@@ -1,13 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <rss xmlns:podcast="https://podcastindex.org/namespace/1.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
   <channel>
-    <title>gajan92's YouTube Podcast</title>
+    <title>Gajan's Listening Queue</title>
     <link>https://gajan92.github.io/gajanmogan/feed/feed.xml</link>
     <description>Auto-generated audio podcast from curated YouTube videos</description>
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Thu, 14 May 2026 21:20:33 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 15 May 2026 07:56:44 +0000</lastBuildDate>
     <itunes:author>gajan92</itunes:author>
     <itunes:explicit>no</itunes:explicit>
     <item>
@@ -32,6 +32,38 @@ Follow Global News on TikTok HERE: https://www.tiktok.com/@globalnews.ca?lang=en
       <pubDate>Thu, 14 May 2026 21:20:33 +0000</pubDate>
       <itunes:image href="https://i.ytimg.com/vi/ueCi2K6oTFk/maxresdefault.jpg"/>
       <itunes:duration>00:03:10</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+    </item>
+    <item>
+      <title>Talking news and media with Max Fisher</title>
+      <description>I'm launching a new channel with Max Fisher. Go check out The Bigger Picture &amp;amp; subscribe: https://www.youtube.com/@maxfisher 
+
+Join Newpress, our community-driven hub for creator journalism: https://newpress.com/go
+
+MORE CHANNELS:
+Check out my new channel with Max Fisher - The Bigger Picture: https://www.youtube.com/@maxfisher  
+Check out my channel with Christophe Haubursin - Tunnel Vision  https://www.youtube.com/@christophe  
+Check out my channel with Sam Ellis - Search Party https://youtube.com/@SearchParty  
+
+Do you have an insider tip or unique information on a story? Do you have a suggestion for a story you want us to cover? Submit to the Tip Line: https://docs.google.com/forms/d/e/1FAIpQLSdpNs1ykIwd7KNkwntN897X_SX9hJ8WiTH_erlLU_bQp2GGLg/viewform?usp=sharing
+
+About: 
+Johnny Harris is an Emmy-winning independent journalist and contributor to the New York Times. Based in Washington, DC, Harris reports on interesting trends and stories domestically and around the globe, publishing to his audience of over 5 million on Youtube.  Harris produced and hosted the twice Emmy-nominated series Borders for Vox Media. His visual style blends motion graphics with cinematic videography to create content that explains complex issues in relatable ways.
+
+- press - 
+NYTimes: https://www.nytimes.com/2021/11/09/opinion/democrats-blue-states-legislation.html
+NYTimes: https://www.nytimes.com/video/opinion/100000007358968/covid-pandemic-us-response.html
+Vox Borders: https://www.youtube.com/watch?v=hLrFyjGZ9NU
+NPR Planet Money: https://www.npr.org/transcripts/1072164745
+
+- where to find me -
+Instagram: https://www.instagram.com/johnny.harris/
+Tiktok: https://www.tiktok.com/@johnny.harris
+Facebook: https://www.facebook.com/JohnnyHarrisVox</description>
+      <guid isPermaLink="false">vmGm8xn_1Ro</guid>
+      <enclosure url="https://github.com/gajan92/gajanmogan/releases/download/audio-2026-05/vmGm8xn_1Ro.mp3" length="30141354" type="audio/mpeg"/>
+      <pubDate>Fri, 15 May 2026 07:56:44 +0000</pubDate>
+      <itunes:duration>00:43:10</itunes:duration>
       <itunes:explicit>no</itunes:explicit>
     </item>
   </channel>
