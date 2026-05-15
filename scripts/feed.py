@@ -134,6 +134,8 @@ def rebuild_feed(episodes_json_path: Path, output_path: Path, config: dict) -> N
         if thumbnail_url:
             base = thumbnail_url.split("?")[0].lower()
             if base.endswith(".webp"):
+                # Fix both the path segment and extension for YouTube webp URLs
+                thumbnail_url = thumbnail_url.replace("vi_webp/", "vi/")
                 thumbnail_url = thumbnail_url[:thumbnail_url.lower().rfind(".webp")] + ".jpg"
             if thumbnail_url.split("?")[0].lower().endswith((".jpg", ".png")):
                 fe.podcast.itunes_image(thumbnail_url)
