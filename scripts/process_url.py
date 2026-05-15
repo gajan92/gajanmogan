@@ -230,6 +230,13 @@ def main():
 
     except Exception:
         tb = traceback.format_exc()
+        summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary_path:
+            try:
+                with open(summary_path, "a") as f:
+                    f.write(f"## Processing failed\n\n```\n{tb}\n```\n")
+            except Exception:
+                pass
         try:
             gh_comment(
                 args.issue_number,
