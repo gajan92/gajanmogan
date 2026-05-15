@@ -112,6 +112,12 @@ def _raise_descriptive_error(stderr: str, url: str) -> None:
         raise RuntimeError(f"Video is private: {url}")
     if "video unavailable" in lower or "has been removed" in lower:
         raise RuntimeError(f"Video is unavailable or has been removed: {url}")
+    if "sign in to confirm" in lower or "confirm you're not a bot" in lower:
+        raise RuntimeError(
+            "YouTube cookies expired or invalid. "
+            "Recapture cookies from iPhone Safari via Proxyman and update the "
+            "YT_COOKIE_HEADER secret in repo Settings → Secrets."
+        )
     if "sign in" in lower or "login" in lower:
         raise RuntimeError(
             f"Video requires sign-in: {url}\nyt-dlp error: {stderr}"
