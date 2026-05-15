@@ -92,7 +92,7 @@ jobs:
           for i in 1 2 3; do
             git pull --rebase origin master && git push && break
             sleep $((i * 2))
-          done
+          done || { echo "Push failed after 3 retries"; exit 1; }
 
   purge:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -128,4 +128,4 @@ jobs:
           for i in 1 2 3; do
             git pull --rebase origin master && git push && break
             sleep $((i * 2))
-          done
+          done || { echo "Push failed after 3 retries"; exit 1; }
