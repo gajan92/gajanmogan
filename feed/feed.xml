@@ -12,7 +12,7 @@
       <link>https://gajan92.github.io/gajanmogan/feed/feed.xml</link>
     </image>
     <language>en</language>
-    <lastBuildDate>Fri, 15 May 2026 16:40:09 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 15 May 2026 17:11:25 +0000</lastBuildDate>
     <itunes:author>gajan92</itunes:author>
     <itunes:image href="https://gajan92.github.io/gajanmogan/feed/cover.png"/>
     <itunes:explicit>no</itunes:explicit>
@@ -162,6 +162,38 @@ Watch on YouTube: https://www.youtube.com/watch?v=o47YzxY3x84</description>
       <pubDate>Fri, 15 May 2026 16:40:09 +0000</pubDate>
       <itunes:image href="https://i.ytimg.com/vi/o47YzxY3x84/maxresdefault.jpg"/>
       <itunes:duration>00:09:30</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+    </item>
+    <item>
+      <title>The Worst Day in Xbox History</title>
+      <description>Channel: Regular Eyepatch Wolf
+Uploaded: 19 March 2026
+Views: 71.5K
+Likes: 3.4K
+Comments: 544
+
+Editor: @Foxcade  
+Outro Music: @cyricstruth 
+
+Patreon: https://www.patreon.com/Supereyepatch... 
+Twitch: https://www.twitch.tv/supereyepatchwolf 
+Instagram: https://www.instagram.com/super_eyepatch_wolf/
+Twitter: https://twitter.com/EyePatchWolf 
+
+Versus Wolves:
+https://www.youtube.com/@VersusWolvesPodcast
+(and wherever you get your podcasts)
+
+Jeff Jeffs Bizarre Adventure Anime Podcast:
+Itunes :https://podcasts.apple.com/us/podcast/jeffjeffs-bizarre-adventure/id1610221160
+(but also anywhere you can get podcasts)
+
+Watch on YouTube: https://www.youtube.com/watch?v=raJYUHds5fs</description>
+      <guid isPermaLink="false">raJYUHds5fs</guid>
+      <enclosure url="https://github.com/gajan92/gajanmogan/releases/download/audio-2026-05/raJYUHds5fs.mp3" length="12871495" type="audio/mpeg"/>
+      <pubDate>Fri, 15 May 2026 17:11:25 +0000</pubDate>
+      <itunes:image href="https://i.ytimg.com/vi/raJYUHds5fs/maxresdefault.jpg"/>
+      <itunes:duration>00:17:43</itunes:duration>
       <itunes:explicit>no</itunes:explicit>
     </item>
   </channel>
