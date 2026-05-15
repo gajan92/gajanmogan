@@ -79,7 +79,12 @@ def rebuild_feed(episodes_json_path: Path, output_path: Path, config: dict) -> N
         fe = fg.add_entry()
         fe.id(ep["video_id"])
         fe.title(ep["title"])
-        fe.description(_sanitize_description(ep.get("description", "")))
+
+        original_url = ep.get("original_url", "")
+        description = _sanitize_description(ep.get("description", ""))
+        if original_url:
+            description += f"\n\nWatch on YouTube: {original_url}"
+        fe.description(description)
 
         pub = datetime.fromisoformat(ep["ripped_at"].replace("Z", "+00:00"))
         fe.pubDate(pub)
@@ -94,8 +99,12 @@ def rebuild_feed(episodes_json_path: Path, output_path: Path, config: dict) -> N
         fe.podcast.itunes_explicit("no")
 
         thumbnail_url = ep.get("thumbnail_url", "")
-        if thumbnail_url and thumbnail_url.split("?")[0].lower().endswith((".jpg", ".png")):
-            fe.podcast.itunes_image(thumbnail_url)
+        if thumbnail_url:
+            base = thumbnail_url.split("?")[0].lower()
+            if base.endswith(".webp"):
+                thumbnail_url = thumbnail_url[:thumbnail_url.lower().rfind(".webp")] + ".jpg"
+            if thumbnail_url.split("?")[0].lower().endswith((".jpg", ".png")):
+                fe.podcast.itunes_image(thumbnail_url)
 
         chapters = ep.get("chapters") or []
         if chapters:
