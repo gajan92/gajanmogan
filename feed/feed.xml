@@ -6,9 +6,15 @@
     <description>Auto-generated audio podcast from curated YouTube videos</description>
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
+    <image>
+      <url>https://gajan92.github.io/gajanmogan/feed/cover.png</url>
+      <title>Gajan's Listening Queue</title>
+      <link>https://gajan92.github.io/gajanmogan/feed/feed.xml</link>
+    </image>
     <language>en</language>
-    <lastBuildDate>Fri, 15 May 2026 07:56:44 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 15 May 2026 09:32:04 +0000</lastBuildDate>
     <itunes:author>gajan92</itunes:author>
+    <itunes:image href="https://gajan92.github.io/gajanmogan/feed/cover.png"/>
     <itunes:explicit>no</itunes:explicit>
     <item>
       <title>Trump seeks greater China cooperation, invites Xi to White House</title>
@@ -26,7 +32,9 @@ Subscribe to Global News Channel HERE: http://bit.ly/20fcXDc
 Follow Global News on X HERE: http://bit.ly/1Toz8mt
 Follow Global News on TikTok HERE: https://www.tiktok.com/@globalnews.ca?lang=en 
 
-#GlobalNews</description>
+#GlobalNews
+
+Watch on YouTube: https://youtube.com/watch?v=ueCi2K6oTFk&amp;is=PFU6EaDCtvdF0U_4</description>
       <guid isPermaLink="false">ueCi2K6oTFk</guid>
       <enclosure url="https://github.com/gajan92/gajanmogan/releases/download/audio-2026-05/ueCi2K6oTFk.mp3" length="3017869" type="audio/mpeg"/>
       <pubDate>Thu, 14 May 2026 21:20:33 +0000</pubDate>
@@ -59,11 +67,40 @@ NPR Planet Money: https://www.npr.org/transcripts/1072164745
 - where to find me -
 Instagram: https://www.instagram.com/johnny.harris/
 Tiktok: https://www.tiktok.com/@johnny.harris
-Facebook: https://www.facebook.com/JohnnyHarrisVox</description>
+Facebook: https://www.facebook.com/JohnnyHarrisVox
+
+Watch on YouTube: https://youtube.com/watch?v=vmGm8xn_1Ro&amp;si=Ljc5FZYgLG_p3Rys</description>
       <guid isPermaLink="false">vmGm8xn_1Ro</guid>
       <enclosure url="https://github.com/gajan92/gajanmogan/releases/download/audio-2026-05/vmGm8xn_1Ro.mp3" length="30141354" type="audio/mpeg"/>
       <pubDate>Fri, 15 May 2026 07:56:44 +0000</pubDate>
+      <itunes:image href="https://i.ytimg.com/vi_webp/vmGm8xn_1Ro/maxresdefault.jpg"/>
       <itunes:duration>00:43:10</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+    </item>
+    <item>
+      <title>It Finally Happened.</title>
+      <description>Editor: @Foxcade  
+Outro Music: @cyricstruth 
+
+Patreon: https://www.patreon.com/Supereyepatch... 
+Twitch: https://www.twitch.tv/supereyepatchwolf 
+Instagram: https://www.instagram.com/super_eyepatch_wolf/
+Twitter: https://twitter.com/EyePatchWolf 
+
+Versus Wolves:
+https://www.youtube.com/@VersusWolvesPodcast
+(and wherever you get your podcasts)
+
+Jeff Jeffs Bizarre Adventure Anime Podcast:
+Itunes :https://podcasts.apple.com/us/podcast/jeffjeffs-bizarre-adventure/id1610221160
+(but also anywhere you can get podcasts)
+
+Watch on YouTube: https://www.youtube.com/watch?v=AHPTq8w-7ks</description>
+      <guid isPermaLink="false">AHPTq8w-7ks</guid>
+      <enclosure url="https://github.com/gajan92/gajanmogan/releases/download/audio-2026-05/AHPTq8w-7ks.mp3" length="8588672" type="audio/mpeg"/>
+      <pubDate>Fri, 15 May 2026 09:32:04 +0000</pubDate>
+      <itunes:image href="https://i.ytimg.com/vi_webp/AHPTq8w-7ks/maxresdefault.jpg"/>
+      <itunes:duration>00:11:14</itunes:duration>
       <itunes:explicit>no</itunes:explicit>
     </item>
   </channel>
