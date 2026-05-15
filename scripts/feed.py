@@ -19,6 +19,23 @@ def _sanitize_description(text: str, max_chars: int = 4000) -> str:
     return html.escape(cleaned, quote=False)
 
 
+def _format_date(date_str: str) -> str:
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d").strftime("%-d %B %Y")
+    except ValueError:
+        return date_str
+
+
+def _format_count(n) -> str:
+    if n is None:
+        return ""
+    if n >= 1_000_000:
+        return f"{n / 1_000_000:.1f}M"
+    if n >= 1_000:
+        return f"{n / 1_000:.1f}K"
+    return str(n)
+
+
 def _parse_duration(seconds: int) -> str:
     h = seconds // 3600
     m = (seconds % 3600) // 60
@@ -81,7 +98,22 @@ def rebuild_feed(episodes_json_path: Path, output_path: Path, config: dict) -> N
         fe.title(ep["title"])
 
         original_url = ep.get("original_url", "")
+
+        meta_parts = []
+        if ep.get("channel"):
+            meta_parts.append(f"Channel: {ep['channel']}")
+        if ep.get("upload_date"):
+            meta_parts.append(f"Uploaded: {_format_date(ep['upload_date'])}")
+        if ep.get("view_count") is not None:
+            meta_parts.append(f"Views: {_format_count(ep['view_count'])}")
+        if ep.get("like_count") is not None:
+            meta_parts.append(f"Likes: {_format_count(ep['like_count'])}")
+        if ep.get("comment_count") is not None:
+            meta_parts.append(f"Comments: {_format_count(ep['comment_count'])}")
+
         description = _sanitize_description(ep.get("description", ""))
+        if meta_parts:
+            description = "\n".join(meta_parts) + "\n\n" + description
         if original_url:
             description += f"\n\nWatch on YouTube: {original_url}"
         fe.description(description)

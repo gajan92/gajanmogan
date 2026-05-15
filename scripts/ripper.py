@@ -99,6 +99,9 @@ def rip(url: str, output_dir: Path) -> dict:
         "file_path": str(file_path),
         "file_size_bytes": file_path.stat().st_size,
         "chapters": meta.get("chapters") or [],
+        "view_count": meta.get("view_count"),
+        "like_count": meta.get("like_count"),
+        "comment_count": meta.get("comment_count"),
     }
 
 

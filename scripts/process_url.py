@@ -202,6 +202,9 @@ def main():
             "file_size_bytes": rip_result["file_size_bytes"],
             "chapters": chapters,
             "chapters_url": chapters_url,
+            "view_count": rip_result.get("view_count"),
+            "like_count": rip_result.get("like_count"),
+            "comment_count": rip_result.get("comment_count"),
             "ripped_at": now.isoformat().replace("+00:00", "Z"),
             "expires_at": (now + timedelta(days=retention_days))
                           .isoformat().replace("+00:00", "Z"),
