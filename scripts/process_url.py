@@ -177,8 +177,8 @@ def main():
             gh_close_with_label(args.issue_number, "skipped", args.repo, token)
             sys.exit(0)
 
-        # Step 3: Rip audio
-        rip_result = rip(args.url, AUDIO_DIR)
+        # Step 3: Rip audio (reuse metadata to avoid a second yt-dlp call)
+        rip_result = rip(args.url, AUDIO_DIR, meta=meta)
 
         # Step 4: Upload to GitHub Release
         download_url = upload_audio(Path(rip_result["file_path"]), args.repo, token)

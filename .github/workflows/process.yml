@@ -89,10 +89,17 @@ jobs:
             exit 0
           fi
           git commit -m "Add episode (issue #${{ github.event.issue.number }})"
-          for i in 1 2 3; do
-            git pull --rebase origin master && git push && break
-            sleep $((i * 2))
-          done || { echo "Push failed after 3 retries"; exit 1; }
+          branch="${{ github.event.repository.default_branch }}"
+          delay=2
+          for i in 1 2 3 4; do
+            if git pull --rebase origin "$branch" && git push origin HEAD:"$branch"; then
+              exit 0
+            fi
+            sleep "$delay"
+            delay=$((delay * 2))
+          done
+          echo "Push failed after 4 retries"
+          exit 1
 
   purge:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -125,7 +132,14 @@ jobs:
             exit 0
           fi
           git commit -m "Purge expired episodes"
-          for i in 1 2 3; do
-            git pull --rebase origin master && git push && break
-            sleep $((i * 2))
-          done || { echo "Push failed after 3 retries"; exit 1; }
+          branch="${{ github.event.repository.default_branch }}"
+          delay=2
+          for i in 1 2 3 4; do
+            if git pull --rebase origin "$branch" && git push origin HEAD:"$branch"; then
+              exit 0
+            fi
+            sleep "$delay"
+            delay=$((delay * 2))
+          done
+          echo "Push failed after 4 retries"
+          exit 1

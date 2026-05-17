@@ -51,14 +51,16 @@ def fetch_metadata(url: str) -> dict:
     return json.loads(result.stdout)
 
 
-def rip(url: str, output_dir: Path) -> dict:
+def rip(url: str, output_dir: Path, meta: dict | None = None) -> dict:
     """
     Download and extract audio to output_dir/{video_id}.mp3.
-    Returns episode metadata dict.
+    Returns episode metadata dict. Pass `meta` to reuse an already-fetched
+    metadata dict and skip the extra yt-dlp metadata round-trip.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    meta = fetch_metadata(url)
+    if meta is None:
+        meta = fetch_metadata(url)
     video_id = meta["id"]
     output_template = str(output_dir / f"{video_id}.%(ext)s")
 
