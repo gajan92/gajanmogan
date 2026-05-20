@@ -12,7 +12,7 @@
       <link>https://gajan92.github.io/gajanmogan/feed/feed.xml</link>
     </image>
     <language>en</language>
-    <lastBuildDate>Sun, 17 May 2026 06:39:28 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 20 May 2026 07:51:11 +0000</lastBuildDate>
     <itunes:author>gajan92</itunes:author>
     <itunes:image href="https://gajan92.github.io/gajanmogan/feed/cover.png"/>
     <itunes:explicit>no</itunes:explicit>
@@ -273,6 +273,25 @@ Watch on YouTube: https://www.youtube.com/watch?v=1yWSTCjVkBQ</description>
       <pubDate>Sun, 17 May 2026 06:39:28 +0000</pubDate>
       <itunes:image href="https://i.ytimg.com/vi/1yWSTCjVkBQ/maxresdefault.jpg"/>
       <itunes:duration>00:20:16</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+    </item>
+    <item>
+      <title>The Greatest Book I Have Ever Read</title>
+      <description>Channel: Daniel Greene
+Uploaded: 24 February 2026
+Views: 117.5K
+Likes: 5.4K
+Comments: 884
+
+You can get the book here: https://bookshop.org/a/89948/9780140449266 
+The Count of Monte Cristo might be the greatest book ever written. Alexandre Dumas created something so perfect, so consuming, and so brutally satisfying that I genuinely feel different after reading it. In this video I'm breaking down why The Count of Monte Cristo deserves to be at the top of every reading list — and why if you haven't read it yet, you should let me convince your ignorant ass to read it with this deep dive.
+
+Watch on YouTube: https://www.youtube.com/watch?v=wePSaySDa-k</description>
+      <guid isPermaLink="false">wePSaySDa-k</guid>
+      <enclosure url="https://github.com/gajan92/gajanmogan/releases/download/audio-2026-05/wePSaySDa-k.mp3" length="30731345" type="audio/mpeg"/>
+      <pubDate>Wed, 20 May 2026 07:51:11 +0000</pubDate>
+      <itunes:image href="https://i.ytimg.com/vi/wePSaySDa-k/maxresdefault.jpg"/>
+      <itunes:duration>00:35:36</itunes:duration>
       <itunes:explicit>no</itunes:explicit>
     </item>
   </channel>
