@@ -99,14 +99,17 @@ def _load_episodes() -> list:
 
 def _save_episodes(episodes: list) -> None:
     EPISODES_PATH.parent.mkdir(parents=True, exist_ok=True)
-    EPISODES_PATH.write_text(
+    tmp = EPISODES_PATH.with_suffix(".json.tmp")
+    tmp.write_text(
         json.dumps(episodes, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    os.replace(tmp, EPISODES_PATH)
 
 
 def _build_feed_config(repo: str) -> dict:
     owner, repo_name = repo.split("/", 1)
+    default_image = f"https://{owner}.github.io/{repo_name}/feed/cover.png"
     return {
         "title": os.environ.get("FEED_TITLE", f"{owner}'s YouTube Podcast"),
         "description": os.environ.get(
@@ -115,6 +118,7 @@ def _build_feed_config(repo: str) -> dict:
         "link": f"https://{owner}.github.io/{repo_name}/feed/feed.xml",
         "author": owner,
         "language": "en",
+        "image_url": os.environ.get("FEED_IMAGE_URL", default_image),
     }
 
 
@@ -198,6 +202,9 @@ def main():
             "file_size_bytes": rip_result["file_size_bytes"],
             "chapters": chapters,
             "chapters_url": chapters_url,
+            "view_count": rip_result.get("view_count"),
+            "like_count": rip_result.get("like_count"),
+            "comment_count": rip_result.get("comment_count"),
             "ripped_at": now.isoformat().replace("+00:00", "Z"),
             "expires_at": (now + timedelta(days=retention_days))
                           .isoformat().replace("+00:00", "Z"),
@@ -213,21 +220,29 @@ def main():
         # Step 7: Rebuild RSS feed (also writes chapters JSON if applicable)
         rebuild_feed(EPISODES_PATH, FEED_PATH, _build_feed_config(args.repo))
 
-        # Step 8: Comment success and close issue
+        # Step 8: Write result for the post-push close step
         duration_str = _format_duration(rip_result["duration_seconds"])
         chapters_note = f"\nChapters: {chapters_url}" if chapters_url else ""
-        gh_comment(
-            args.issue_number,
-            f"✅ Added: **{rip_result['title']}** ({duration_str})\n\n"
-            f"Download: {download_url}{chapters_note}\n"
-            f"Expires: {episode['expires_at'][:10]}",
-            args.repo,
-            token,
+        Path("/tmp/episode_result.json").write_text(
+            json.dumps({
+                "title": rip_result["title"],
+                "duration_str": duration_str,
+                "download_url": download_url,
+                "chapters_note": chapters_note,
+                "expires_at": episode["expires_at"][:10],
+            }),
+            encoding="utf-8",
         )
-        gh_close_with_label(args.issue_number, "processed", args.repo, token)
 
     except Exception:
         tb = traceback.format_exc()
+        summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary_path:
+            try:
+                with open(summary_path, "a") as f:
+                    f.write(f"## Processing failed\n\n```\n{tb}\n```\n")
+            except Exception:
+                pass
         try:
             gh_comment(
                 args.issue_number,
