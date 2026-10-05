@@ -1,0 +1,1028 @@
+/* ==UserStyle==
+@name           kino for YouTube
+@namespace      github.com/gajan92/gajanmogan
+@version        0.1.0
+@description    Ambient, calmer layout for the YouTube watch page. Works on its own; kino.user.js adds the tabbed panel, chapter timeline, docked player and end screen.
+@author         gajan92
+@license        MIT
+==/UserStyle== */
+
+@import url("https://fonts.googleapis.com/css2?family=Funnel+Display:wght@500..700&family=Geist:wght@400..600&family=Geist+Mono:wght@400;500&display=swap");
+
+@-moz-document domain("youtube.com") {
+
+/* ------------------------------------------------------------------
+   1. Tokens. kino.user.js overwrites --kino-accent and --kino-amb-*
+      with colors sampled from the playing video.
+   ------------------------------------------------------------------ */
+:root {
+  --kino-accent: #ffb37a;
+  --kino-amb-1: #2e2346;
+  --kino-amb-2: #a2475a;
+  --kino-amb-3: #f08a5d;
+  --kino-bg: #0b0a0f;
+  --kino-text: #f4f1f6;
+  --kino-muted: rgba(244, 241, 246, 0.66);
+  --kino-glass: rgba(255, 255, 255, 0.06);
+  --kino-glass-strong: rgba(255, 255, 255, 0.13);
+  --kino-line: rgba(255, 255, 255, 0.1);
+  --kino-radius: 18px;
+  --kino-panel-w: 384px;
+  --kino-dock-h: calc(var(--kino-panel-w) * 9 / 16);
+  --kino-top: calc(var(--ytd-masthead-height, 56px) + 12px);
+  --kino-font: "Geist", system-ui, sans-serif;
+  --kino-display: "Funnel Display", "Geist", system-ui, sans-serif;
+  --kino-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+/* ------------------------------------------------------------------
+   2. Watch page ground. With the script, .kino-watch marks the watch
+      page exactly; without it, :has() finds the visible watch page.
+   ------------------------------------------------------------------ */
+:root:is(.kino-watch, :not(.kino-js):has(ytd-watch-flexy:not([hidden]))) {
+  background: var(--kino-bg) !important;
+  color-scheme: dark;
+  --yt-spec-base-background: var(--kino-bg);
+  --yt-spec-raised-background: #16131b;
+  --yt-spec-menu-background: #1b1820;
+  --yt-spec-text-primary: var(--kino-text);
+  --yt-spec-text-secondary: var(--kino-muted);
+  --yt-spec-text-disabled: rgba(244, 241, 246, 0.4);
+  --yt-spec-icon-inactive: var(--kino-text);
+  --yt-spec-icon-active-other: var(--kino-text);
+  --yt-spec-brand-icon-inactive: var(--kino-text);
+  --yt-spec-badge-chip-background: rgba(255, 255, 255, 0.08);
+  --yt-spec-button-chip-background-hover: rgba(255, 255, 255, 0.14);
+  --yt-spec-10-percent-layer: rgba(255, 255, 255, 0.1);
+  --yt-spec-outline: rgba(255, 255, 255, 0.12);
+  --yt-spec-call-to-action: var(--kino-accent);
+}
+
+:root:is(.kino-watch, :not(.kino-js):has(ytd-watch-flexy:not([hidden]))) :is(body, ytd-app, #page-manager.ytd-app, ytd-watch-flexy) {
+  background: transparent !important;
+}
+
+/* ------------------------------------------------------------------
+   3. Ambient color behind the page (blobs are added by the script)
+   ------------------------------------------------------------------ */
+#kino-ambient {
+  display: none;
+  position: fixed;
+  top: -12%;
+  left: -12%;
+  right: -12%;
+  bottom: -12%;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.55;
+  filter: blur(120px) saturate(140%);
+}
+
+:root.kino-watch #kino-ambient {
+  display: block;
+}
+
+#kino-ambient .kino-blob {
+  position: absolute;
+  border-radius: 50%;
+  transition: background-color 1.4s ease;
+}
+
+#kino-ambient .kino-b1 { left: 0; top: 4%; width: 55%; height: 60%; background: var(--kino-amb-1); }
+#kino-ambient .kino-b2 { left: 22%; top: 30%; width: 50%; height: 55%; background: var(--kino-amb-2); }
+#kino-ambient .kino-b3 { left: 46%; top: 46%; width: 52%; height: 60%; background: var(--kino-amb-3); }
+
+/* A dark wash above the color so text stays readable */
+:root.kino-watch body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(11, 10, 15, 0.25), rgba(11, 10, 15, 0.82));
+}
+
+/* The script paints the whole page, so YouTube's own ambient mode would double it */
+:root.kino-js ytd-watch-flexy :is(#cinematics, #cinematics-container) {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------
+   4. Top bar
+   ------------------------------------------------------------------ */
+:root:is(.kino-watch, :not(.kino-js):has(ytd-watch-flexy:not([hidden]))) #masthead-container.ytd-app {
+  background: rgba(11, 10, 15, 0.42) !important;
+  backdrop-filter: blur(20px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:root:is(.kino-watch, :not(.kino-js):has(ytd-watch-flexy:not([hidden]))) :is(ytd-masthead, ytd-masthead #background) {
+  background: transparent !important;
+}
+
+:root:is(.kino-watch, :not(.kino-js):has(ytd-watch-flexy:not([hidden]))) :is(ytd-searchbox #container.ytd-searchbox, [class*="SearchboxComponentInputBox"]) {
+  background: var(--kino-glass) !important;
+  border-color: var(--kino-line) !important;
+}
+
+:root:is(.kino-watch, :not(.kino-js):has(ytd-watch-flexy:not([hidden]))) :is(#search-icon-legacy, [class*="SearchboxComponentSearchButton"]) {
+  background: var(--kino-glass-strong) !important;
+  border-color: var(--kino-line) !important;
+}
+
+:root:is(.kino-watch, :not(.kino-js):has(ytd-watch-flexy:not([hidden]))) #voice-search-button {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------
+   5. Type
+   ------------------------------------------------------------------ */
+ytd-watch-flexy :is(#below, #secondary) :is(h1, h2, h3, h4, a, span, button, div, yt-formatted-string, [class*="attributed-string"]) {
+  font-family: var(--kino-font) !important;
+}
+
+/* ------------------------------------------------------------------
+   6. Columns
+   ------------------------------------------------------------------ */
+ytd-watch-flexy[flexy] {
+  --ytd-watch-flexy-horizontal-page-margin: 28px !important;
+  --ytd-watch-flexy-sidebar-width: var(--kino-panel-w) !important;
+  --ytd-watch-flexy-sidebar-min-width: var(--kino-panel-w) !important;
+}
+
+ytd-watch-flexy[flexy][is-two-columns_] #columns.ytd-watch-flexy {
+  max-width: none !important;
+}
+
+ytd-watch-flexy[flexy][is-two-columns_] #primary.ytd-watch-flexy {
+  padding-top: 12px !important;
+  padding-right: 24px !important;
+}
+
+ytd-watch-flexy[flexy][is-two-columns_] #secondary.ytd-watch-flexy {
+  padding-top: 12px !important;
+  padding-right: 28px !important;
+}
+
+/* ------------------------------------------------------------------
+   7. Player
+   ------------------------------------------------------------------ */
+ytd-watch-flexy:not([theater]):not([fullscreen]) #player-container-outer.ytd-watch-flexy {
+  border-radius: var(--kino-radius);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+}
+
+ytd-watch-flexy:not([theater]):not([fullscreen]) :is(#ytd-player, #ytd-player #container, #movie_player) {
+  border-radius: var(--kino-radius) !important;
+  overflow: hidden;
+}
+
+.html5-video-player .ytp-play-progress,
+.html5-video-player .ytp-scrubber-button {
+  background: var(--kino-accent) !important;
+}
+
+/* Frame preview while hovering the seek bar */
+.html5-video-player .ytp-tooltip.ytp-preview :is(.ytp-tooltip-bg, .ytp-tooltip-image) {
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.html5-video-player .ytp-tooltip-text {
+  font-family: var(--kino-mono) !important;
+}
+
+.html5-video-player .ytp-tooltip-title {
+  font-family: var(--kino-font) !important;
+  font-weight: 500 !important;
+}
+
+/* Cards that creators pin over the last seconds of a video. Delete this rule to keep them. */
+.html5-video-player .ytp-ce-element {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------
+   8. Title, channel, buttons, description
+   ------------------------------------------------------------------ */
+ytd-watch-metadata #title.ytd-watch-metadata {
+  margin-top: 18px !important;
+}
+
+ytd-watch-metadata #title.ytd-watch-metadata :is(h1, h1 yt-formatted-string) {
+  font-family: var(--kino-display) !important;
+  font-size: 30px !important;
+  line-height: 1.12 !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+}
+
+ytd-watch-metadata #actions .yt-spec-button-shape-next--tonal {
+  background: var(--kino-glass) !important;
+  border: 1px solid var(--kino-line) !important;
+  backdrop-filter: blur(20px);
+}
+
+ytd-watch-metadata #actions .yt-spec-button-shape-next--tonal:hover {
+  background: var(--kino-glass-strong) !important;
+}
+
+ytd-watch-metadata #subscribe-button .yt-spec-button-shape-next--filled {
+  background: var(--kino-text) !important;
+  color: var(--kino-bg) !important;
+}
+
+ytd-watch-metadata #description.ytd-watch-metadata {
+  background: var(--kino-glass) !important;
+  border: 1px solid var(--kino-line);
+  border-radius: 16px !important;
+  backdrop-filter: blur(24px);
+}
+
+/* ------------------------------------------------------------------
+   9. Right column without the script: one glass card
+   ------------------------------------------------------------------ */
+:root:not(.kino-js) ytd-watch-flexy[is-two-columns_] #secondary-inner.ytd-watch-flexy {
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: var(--kino-glass);
+  border: 1px solid var(--kino-line);
+  backdrop-filter: blur(24px);
+}
+
+/* ------------------------------------------------------------------
+   10. Side panel with tabs (built by the script)
+   ------------------------------------------------------------------ */
+#kino-panel {
+  position: sticky;
+  top: var(--kino-top);
+  height: calc(100vh - var(--kino-top) - 24px);
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+  border-radius: 22px;
+  background: var(--kino-glass);
+  border: 1px solid var(--kino-line);
+  backdrop-filter: blur(24px) saturate(140%);
+  overflow: hidden;
+  color: var(--kino-text);
+  font: 400 14px/1.45 var(--kino-font);
+}
+
+#kino-panel[hidden],
+ytd-watch-flexy:not([is-two-columns_]) #kino-panel {
+  display: none !important;
+}
+
+/* The panel only stays in view if its column runs the full page height */
+ytd-watch-flexy[is-two-columns_] #secondary-inner:has(> #kino-panel) {
+  height: 100%;
+}
+
+#kino-panel .kino-tabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  margin: 10px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+#kino-panel .kino-tab {
+  flex: 1 1 0;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--kino-muted);
+  font: 500 13px/1 var(--kino-font);
+  cursor: pointer;
+}
+
+#kino-panel .kino-tab:hover {
+  background: var(--kino-glass);
+  color: var(--kino-text);
+}
+
+#kino-panel .kino-tab[aria-selected="true"] {
+  background: var(--kino-glass-strong);
+  color: var(--kino-text);
+  font-weight: 600;
+}
+
+:is(#kino-panel, #kino-timeline, #kino-details, #kino-end, #kino-undock) :focus-visible,
+#kino-undock:focus-visible {
+  outline: 2px solid var(--kino-accent);
+  outline-offset: 2px;
+}
+
+#kino-panel .kino-views {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#kino-panel .kino-view {
+  display: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 14px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+#kino-panel .kino-view.is-active {
+  display: block;
+}
+
+#kino-panel .kino-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  color: rgba(244, 241, 246, 0.82);
+}
+
+.kino-switch {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 24px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+}
+
+.kino-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--kino-text);
+  transition: transform 0.15s ease;
+}
+
+.kino-switch[aria-checked="true"] {
+  background: var(--kino-accent);
+}
+
+.kino-switch[aria-checked="true"]::after {
+  transform: translateX(16px);
+  background: #1a0e08;
+}
+
+.kino-switch:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------
+   11. Up next list (YouTube's own list, restyled)
+   ------------------------------------------------------------------ */
+ytd-watch-flexy #related :is(yt-related-chip-cloud-renderer, ytd-reel-shelf-renderer) {
+  display: none !important;
+}
+
+#kino-panel #related {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+ytd-watch-flexy #related ytd-compact-video-renderer {
+  margin-top: 10px !important;
+}
+
+ytd-watch-flexy #related ytd-compact-video-renderer ytd-thumbnail.ytd-compact-video-renderer {
+  width: 120px !important;
+  min-width: 120px !important;
+  margin-right: 12px !important;
+}
+
+ytd-watch-flexy #related ytd-compact-video-renderer ytd-thumbnail #thumbnail {
+  border-radius: 10px !important;
+}
+
+ytd-watch-flexy #related ytd-compact-video-renderer #video-title {
+  font-size: 14px !important;
+  line-height: 1.32 !important;
+}
+
+/* The first video becomes the featured pick */
+ytd-watch-flexy #related ytd-compact-video-renderer:first-of-type #dismissible {
+  flex-direction: column !important;
+}
+
+ytd-watch-flexy #related ytd-compact-video-renderer:first-of-type ytd-thumbnail.ytd-compact-video-renderer {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 0 12px !important;
+}
+
+ytd-watch-flexy #related ytd-compact-video-renderer:first-of-type ytd-thumbnail #thumbnail {
+  border-radius: 14px !important;
+}
+
+ytd-watch-flexy #related ytd-compact-video-renderer:first-of-type #video-title {
+  font-size: 16px !important;
+}
+
+/* Newer list cards YouTube is rolling out */
+ytd-watch-flexy #related yt-lockup-view-model {
+  display: block;
+  margin-top: 10px;
+}
+
+ytd-watch-flexy #related yt-lockup-view-model [class*="__content-image"] {
+  width: 120px !important;
+  min-width: 120px !important;
+  margin-right: 12px !important;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+ytd-watch-flexy #related yt-lockup-view-model:first-of-type [class*="--horizontal"] {
+  flex-direction: column !important;
+}
+
+ytd-watch-flexy #related yt-lockup-view-model:first-of-type [class*="__content-image"] {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 0 12px !important;
+  border-radius: 14px;
+}
+
+/* ------------------------------------------------------------------
+   12. Comments tab
+   ------------------------------------------------------------------ */
+#kino-panel ytd-comments#comments {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#kino-panel ytd-comments-header-renderer {
+  margin: 4px 0 14px !important;
+}
+
+#kino-panel ytd-comment-thread-renderer {
+  margin: 0 0 6px !important;
+  padding: 8px 8px 2px;
+  border-radius: 14px;
+  transition: background-color 0.3s ease;
+}
+
+#kino-panel ytd-comment-thread-renderer.kino-near {
+  background: var(--kino-glass-strong);
+}
+
+#kino-panel #author-thumbnail :is(img, yt-img-shadow) {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+#kino-panel.kino-by-moment ytd-comments #sections > #contents {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#kino-panel.kino-only-t ytd-comment-thread-renderer:not(.kino-has-t) {
+  display: none !important;
+}
+
+#kino-panel .kino-cbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 6px 0 4px;
+  font-size: 12px;
+  color: var(--kino-muted);
+}
+
+#kino-panel .kino-seg-group {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+#kino-panel .kino-seg-btn {
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--kino-muted);
+  font: 500 12px/1 var(--kino-font);
+  cursor: pointer;
+}
+
+#kino-panel .kino-seg-btn[aria-pressed="true"] {
+  background: var(--kino-glass-strong);
+  color: var(--kino-text);
+}
+
+#kino-panel .kino-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+#kino-panel .kino-check input {
+  margin: 0;
+  accent-color: var(--kino-accent);
+}
+
+/* ------------------------------------------------------------------
+   13. Chapters tab
+   ------------------------------------------------------------------ */
+#kino-panel .kino-ch {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 4px;
+  padding: 8px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--kino-text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+#kino-panel .kino-ch:hover {
+  background: var(--kino-glass);
+}
+
+#kino-panel .kino-ch.is-current {
+  background: var(--kino-glass-strong);
+}
+
+.kino-thumb {
+  position: relative;
+  flex: none;
+  width: 120px;
+  aspect-ratio: 16 / 9;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #1c1922 center / cover no-repeat;
+}
+
+.kino-sb {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  transform: translateY(-50%);
+  background-repeat: no-repeat;
+}
+
+.kino-thumb .kino-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  background: var(--kino-accent);
+}
+
+#kino-panel .kino-ch-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#kino-panel .kino-ch-meta {
+  font: 400 11px/1.4 var(--kino-mono);
+  color: var(--kino-muted);
+}
+
+#kino-panel .kino-ch-title {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+#kino-panel .kino-note {
+  margin: 4px 8px 10px;
+  font-size: 12px;
+  color: var(--kino-muted);
+}
+
+#kino-panel .kino-link-btn {
+  margin: 10px 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--kino-line);
+  background: var(--kino-glass);
+  color: var(--kino-text);
+  font: 500 13px/1 var(--kino-font);
+  cursor: pointer;
+}
+
+#kino-panel [hidden] {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------
+   14. Chapter timeline under the player
+   ------------------------------------------------------------------ */
+#kino-timeline {
+  margin: 16px 0 4px;
+  color: var(--kino-text);
+  font: 400 12px/1.4 var(--kino-font);
+}
+
+#kino-timeline[hidden] {
+  display: none !important;
+}
+
+#kino-timeline .kino-tl-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+  color: var(--kino-muted);
+}
+
+#kino-timeline .kino-tl-time {
+  font-family: var(--kino-mono);
+}
+
+#kino-timeline .kino-tl-track {
+  position: relative;
+  height: 64px;
+  display: flex;
+  gap: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+
+#kino-timeline .kino-seg {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 4px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #1c1922 center / cover no-repeat;
+}
+
+#kino-timeline .kino-seg-dim {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(11, 10, 15, 0.55);
+  pointer-events: none;
+}
+
+#kino-timeline .kino-seg-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px 9px 5px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+#kino-timeline .kino-seg-num {
+  margin-right: 4px;
+  font-family: var(--kino-mono);
+  opacity: 0.75;
+}
+
+#kino-timeline .kino-heat {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 100%;
+  height: 44px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+#kino-timeline .kino-heat path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+#kino-timeline .kino-playhead {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 0;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--kino-accent);
+  pointer-events: none;
+}
+
+#kino-timeline .kino-playhead::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--kino-accent);
+}
+
+#kino-timeline .kino-hover {
+  display: none;
+  position: absolute;
+  top: -30px;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(20, 16, 24, 0.88);
+  border: 1px solid var(--kino-line);
+  font: 400 11px/1.4 var(--kino-mono);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#kino-timeline .kino-tl-track:hover .kino-hover {
+  display: block;
+}
+
+/* ------------------------------------------------------------------
+   15. Links and credits from the description
+   ------------------------------------------------------------------ */
+#kino-details {
+  margin: 20px 0 8px;
+  color: var(--kino-text);
+  font: 400 14px/1.45 var(--kino-font);
+}
+
+#kino-details[hidden] {
+  display: none !important;
+}
+
+#kino-details .kino-h {
+  margin: 18px 0 10px;
+  font: 600 13px/1.3 var(--kino-font);
+  color: var(--kino-muted);
+}
+
+#kino-details .kino-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+#kino-details .kino-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--kino-glass);
+  border: 1px solid var(--kino-line);
+  color: var(--kino-text);
+  text-decoration: none;
+  backdrop-filter: blur(20px);
+}
+
+#kino-details .kino-link:hover {
+  background: var(--kino-glass-strong);
+}
+
+#kino-details .kino-link-label {
+  font-size: 15px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+#kino-details .kino-link-host {
+  font-size: 12px;
+  color: var(--kino-muted);
+}
+
+#kino-details .kino-credits {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px 24px;
+}
+
+#kino-details .kino-credits dt {
+  font-size: 12px;
+  color: var(--kino-muted);
+}
+
+#kino-details .kino-credits dd {
+  margin: 2px 0 0;
+}
+
+/* ------------------------------------------------------------------
+   16. Player docked into the side column while you scroll
+   ------------------------------------------------------------------ */
+:root.kino-docked ytd-watch-flexy[is-two-columns_]:not([theater]):not([fullscreen]) #player.ytd-watch-flexy {
+  aspect-ratio: 16 / 9;
+}
+
+:root.kino-docked ytd-watch-flexy[is-two-columns_]:not([theater]):not([fullscreen]) #player-container-outer.ytd-watch-flexy {
+  position: fixed !important;
+  z-index: 2019;
+  top: var(--kino-top);
+  right: 28px;
+  left: auto !important;
+  width: var(--kino-panel-w) !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+:root.kino-docked #kino-panel {
+  top: calc(var(--kino-top) + var(--kino-dock-h) + 14px);
+  height: calc(100vh - var(--kino-top) - var(--kino-dock-h) - 38px);
+}
+
+#kino-undock {
+  display: none;
+  position: fixed;
+  z-index: 2019;
+  top: var(--kino-top);
+  right: calc(28px + var(--kino-panel-w) + 12px);
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--kino-line);
+  border-radius: 999px;
+  background: rgba(20, 16, 24, 0.75);
+  color: var(--kino-text);
+  font: 500 12px/1 var(--kino-font);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+:root.kino-docked #kino-undock {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------------
+   17. End screen: three picks, Watch again, Stop here
+   ------------------------------------------------------------------ */
+.html5-video-player.ended-mode .html5-endscreen {
+  background: rgba(6, 6, 16, 0.58) !important;
+}
+
+.html5-video-player.ended-mode .ytp-endscreen-content {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: auto !important;
+  bottom: 20% !important;
+  width: auto !important;
+  height: auto !important;
+  display: flex !important;
+  justify-content: center;
+  gap: 16px;
+}
+
+.html5-video-player.ended-mode .ytp-videowall-still {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  width: min(26%, 280px) !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.html5-video-player.ended-mode .ytp-videowall-still:nth-child(n + 4) {
+  display: none !important;
+}
+
+.html5-video-player :is(.ytp-endscreen-previous, .ytp-endscreen-next) {
+  display: none !important;
+}
+
+.html5-video-player[data-kino-stopped] .html5-endscreen {
+  display: none !important;
+}
+
+#kino-end {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 13%;
+  z-index: 40;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 24px;
+  text-align: center;
+  color: #ffffff;
+  font-family: var(--kino-font);
+  pointer-events: none;
+}
+
+.html5-video-player.ended-mode:not([data-kino-stopped]) #kino-end {
+  display: flex;
+}
+
+#kino-end p {
+  margin: 0;
+}
+
+#kino-end .kino-end-kicker {
+  font: 400 12px/1.4 var(--kino-mono);
+  opacity: 0.75;
+}
+
+#kino-end .kino-end-title {
+  font: 600 30px/1.1 var(--kino-display);
+  letter-spacing: -0.02em;
+}
+
+#kino-end .kino-end-sub {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+#kino-end .kino-end-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  pointer-events: auto;
+}
+
+.html5-video-player.ytp-small-mode #kino-end .kino-end-title {
+  font-size: 18px;
+}
+
+.html5-video-player.ytp-small-mode #kino-end :is(.kino-end-sub, .kino-end-kicker) {
+  display: none;
+}
+
+.kino-btn {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: 500 14px/1 var(--kino-font);
+  cursor: pointer;
+}
+
+.kino-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.kino-btn-solid {
+  border-color: transparent;
+  background: #f4f1f6;
+  color: #0b0a0f;
+  font-weight: 600;
+}
+
+.kino-btn-solid:hover {
+  background: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #kino-ambient .kino-blob,
+  #kino-panel ytd-comment-thread-renderer,
+  .kino-switch::after {
+    transition: none;
+  }
+}
+
+}
