@@ -1,0 +1,5 @@
+<properties>
+    <property id="eatStart" type="number">720</property>
+    <property id="eatEnd" type="number">1200</property>
+    <property id="refState" type="number">0</property>
+</properties>
