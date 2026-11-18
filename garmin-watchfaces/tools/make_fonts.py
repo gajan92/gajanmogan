@@ -43,6 +43,7 @@ FONT_SPECS = [
     FontSpec("DR_KCAL", "Inter-700.ttf", 6.5, "KCAL"),
     FontSpec("DR_WXLOHI", "Inter-600.ttf", 7, DIGITS + "-°"),
     FontSpec("HA_B11", "Inter-700.ttf", 11, "EATFSINHMK%" + DIGITS + " .,-"),
+    FontSpec("HA_B9", "Inter-700.ttf", 9, "K%" + DIGITS + " .,-"),
     FontSpec("HA_B15", "Inter-700.ttf", 15, DIGITS + "-°"),
     FontSpec("HA_DAY", "Inter-500.ttf", 15, AZ),
     FontSpec("HA_SUBLABEL", "Inter-600.ttf", 6, "STEPDAY " + DIGITS + "-"),

@@ -17,11 +17,14 @@
   .card { background:var(--card); border-radius:18px; padding:24px; display:flex; flex-direction:column; align-items:center; }
   .watch { width:100%; max-width:400px; aspect-ratio:1; border-radius:50%; background:#000; box-shadow:0 0 0 10px #262626, 0 0 0 12px #4a4a4a, 0 10px 34px rgba(0,0,0,.4); overflow:hidden; }
   .watch svg { width:100%; height:100%; display:block; }
+  body.export { padding:0; background:#000; }
+  body.export #sprites { display:flex; gap:4px; flex-wrap:wrap; }
+  body.export #face, body.export [data-sprite] { display:block; }
   .label { margin-top:24px; font-weight:700; font-size:18px; align-self:flex-start; }
 </style>
 </head>
 <body>
-<h1>Day Ring and Halo, with Orbitron two-tone time</h1>
+<h1>Day Ring and Halo — reference states</h1>
 <div class="grid" id="grid"></div>
 
 <script>
@@ -56,7 +59,8 @@ function ticks(r0,r1,f0,f1,n,col,w=1,majorEvery=0,majorCol="#aaa",majorW=1.6){
 // ---------- text helpers (positions are finalised by layout() after fonts load) ----------
 // vertically centred text: ink is centred on cy; horizontally centred on cx
 function vt(cx,cy,s,o={}){
-  return `<text class="vc" data-cx="${cx}" data-cy="${cy}" data-a="${o.a||'middle'}"${o.id?` data-audit="${o.id}"`:''}${o.center?' data-center="1"':''}${o.deg?' data-deg="1"':''} x="${cx}" y="${cy}" text-anchor="${o.deg?'start':(o.a||'middle')}" fill="${o.f||'#fff'}" font-family="${o.ff||'Inter'}" font-weight="${o.w||400}" font-size="${o.s||14}" letter-spacing="${o.ls||0}">${s}</text>`;
+  const fit=o.fit?` data-fit='${JSON.stringify(o.fit)}'`+(o.fitDial?` data-fitdial="${o.fitDial.join(",")}"`:"")+(o.fitCaps?` data-fitcaps="${o.fitCaps.join(",")}"`:""):"";
+  return `<text class="vc"${fit} data-cx="${cx}" data-cy="${cy}" data-a="${o.a||'middle'}"${o.id?` data-audit="${o.id}"`:''}${o.center?' data-center="1"':''}${o.deg?' data-deg="1"':''} x="${cx}" y="${cy}" text-anchor="${o.deg?'start':(o.a||'middle')}" fill="${o.f||'#fff'}" font-family="${o.ff||'Inter'}" font-weight="${o.w||400}" font-size="${o.s||14}" letter-spacing="${o.ls||0}">${s}</text>`;
 }
 let pid=0;
 function ct(r,f,s,o={}){
@@ -80,127 +84,256 @@ function row(id, mode, x, inner){ return `<g class="row" data-mode="${mode}" dat
 const GLOW = id=>`<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
 
 // time: Orbitron two-tone, scaled to width, centred between two neighbours
-function timeEl(width, above, below){
-  return `<text class="time" data-w="${width}" data-above="${above}" data-below="${below}" data-audit="time" data-center="1" x="${C}" y="${C}" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="60"><tspan fill="#fff">10</tspan><tspan fill="#FF9F1C">:09</tspan></text>`;
+// ---------- states (single source of truth; exported to states.json) ----------
+const HR_HIST=[72,70,68,66,65,63,62,64,70,84,93,88,77,71,68,66,64,63,66,68,65,62,63,64];
+const REF_STATE={ name:"reference", hour:10, minute:9, is24:true, dayName:"WED", dayNum:18, monthName:"NOV",
+  hr:64, hrHistory:HR_HIST, steps:6412, stepGoal:10000, kcalTotal:2180, kcalActive:640, distanceCm:480000, statute:false,
+  weightG:78400, battery:82, batteryDays:6, tempC:12, hiC:14, loC:6, fahrenheit:false, condition:"clear",
+  riseMin:461, setMin:991, eatStart:720, eatEnd:1200 };
+const STATES=[
+  REF_STATE,
+  {...REF_STATE, name:"eating", hour:15, minute:0},
+  {...REF_STATE, name:"missing", hr:null, hrHistory:null, tempC:null, hiC:null, loC:null, condition:null,
+    riseMin:null, setMin:null, weightG:null, batteryDays:null, kcalActive:null},
+  {...REF_STATE, name:"h12single", hour:13, minute:5, is24:false},
+  {...REF_STATE, name:"large", steps:99999, kcalTotal:9999, kcalActive:8888, distanceCm:4219000, statute:true,
+    weightG:181400, battery:100, batteryDays:30, hr:188, tempC:40, hiC:43, loC:37, fahrenheit:true},
+  {...REF_STATE, name:"midnight", hour:0, minute:1, dayName:"THU", dayNum:19, riseMin:462},
+];
+window.STATES=STATES;
+
+// ---------- format rules (mirrored exactly by common/source/Format.mc, Units.mc, Fasting.mc, Sun.mc) ----------
+const pad2=n=>String(n).padStart(2,"0");
+const mod=(x,m)=>((x%m)+m)%m;
+const F={
+  duration(m){ const h=Math.floor(m/60), mm=m%60; return h&&mm?`${h}H ${pad2(mm)}M`:h?`${h}H`:`${mm}M`; },
+  thousands(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,","); },
+  kilo(n){ if(n<1000) return String(n); const q=Math.floor(n/100), w=Math.floor(q/10), d=q%10; return d?`${w}.${d}K`:`${w}K`; },
+  hhmm(m,is24){ const h=Math.floor(m/60), mm=m%60; return is24?`${pad2(h)}:${pad2(mm)}`:`${h%12||12}:${pad2(mm)}`; },
+  clock(h,m,is24){ return is24?[pad2(h),pad2(m)]:[String(h%12||12),pad2(m)]; },
+  windowLabel(s,e){ return (s%60===0&&e%60===0)?`${pad2(s/60)}–${pad2(e/60)}`:`${F.hhmm(s,true)}–${F.hhmm(e,true)}`; },
+  lb(g){ return g==null?"--":(g/453.592).toFixed(1); },
+  distance(cm,statute){ const km=cm/100000; return statute?[(km/1.609344).toFixed(1),"MI"]:[km.toFixed(1),"KM"]; },
+  temp(c,f){ return c==null?"--":String(Math.round(f?c*9/5+32:c)); },
+};
+function fasting(now,s,e){
+  if(s===e) return null;
+  const eatLen=mod(e-s,1440), since=mod(now-s,1440);
+  const st= since<eatLen ? {isEating:true, elapsed:since, total:eatLen} : {isEating:false, elapsed:mod(now-e,1440), total:1440-eatLen};
+  st.minutesLeft=st.total-st.elapsed; st.progress=st.elapsed/st.total; return st;
+}
+function sunNext(now,rise,set){
+  if(rise==null||set==null) return null;
+  return mod(set-now,1440)<=mod(rise-now,1440)?[true,set]:[false,rise];
+}
+const hrFrac=b=>Math.max(0,Math.min(1,(b-40)/150));
+const clamp01=x=>Math.max(0,Math.min(1,x));
+function derive(d){
+  const now=d.hour*60+d.minute, st=fasting(now,d.eatStart,d.eatEnd), sun=sunNext(now,d.riseMin,d.setMin);
+  const night=(d.riseMin!=null&&d.setMin!=null)&&(now>=d.setMin||now<d.riseMin);
+  const leftLabel= st? (st.isEating?`FAST IN ${F.duration(st.minutesLeft)}`:`EAT IN ${F.duration(st.minutesLeft)}`) : "EAT IN --";
+  const [dist,unit]=F.distance(d.distanceCm,d.statute);
+  return {now,st,sun,night,leftLabel,dist,unit,clock:F.clock(d.hour,d.minute,d.is24),
+    wxIcon: d.condition==null?null:(d.condition==="clear"&&night?"clear_night":d.condition)};
 }
 
-// subdial: ticks sit OUTSIDE the progress ring so the centre is free for text
-function subdial(cx,cy,r,f0,f1,frac,cols,trk,w=4,tickCount=36){
+// ---------- layers: S = static (baked into <face>_base.png), D = drawn live on the watch ----------
+const PARAMS=new URLSearchParams(location.search);
+const LAYER=PARAMS.get("layer")||"full";
+const S=x=>x, D=x=>LAYER==="base"?"":x;
+
+// ---------- icons (also exported as sprites) ----------
+function cloudPath(dx=0,dy=0){ return `<path transform="translate(${dx} ${dy})" d="M-5.2 3.6 H4.2 A2.9 2.9 0 0 0 4.4 -2.2 A4.2 4.2 0 0 0 -3.6 -1.2 A2.4 2.4 0 0 0 -5.2 3.6 Z"/>`; }
+function wxIcon(name,cx,cy,c,sc=1){
+  const g=inner=>`<g transform="translate(${cx} ${cy}) scale(${sc})" stroke="${c}" stroke-width="${sc<1?(1.3/sc).toFixed(3):1.5}" stroke-linecap="round" stroke-linejoin="round" fill="none">${inner}</g>`;
+  const rays=(r0,r1)=>{ let s=""; for(let i=0;i<8;i++){const a=i*Math.PI/4; s+=`<line x1="${(r0*Math.cos(a)).toFixed(2)}" y1="${(r0*Math.sin(a)).toFixed(2)}" x2="${(r1*Math.cos(a)).toFixed(2)}" y2="${(r1*Math.sin(a)).toFixed(2)}"/>`;} return s; };
+  switch(name){
+    case "clear": return g(`<circle r="3"/>`+rays(5,6.8));
+    case "clear_night": return g(`<path d="M2.2 -6 A6.2 6.2 0 1 0 6.2 2.6 A4.8 4.8 0 0 1 2.2 -6 Z"/>`);
+    case "partly": return g(`<g transform="translate(-2.4 -2.6) scale(.62)"><circle r="3"/>${rays(5,6.8)}</g>`+cloudPath(1,1.6));
+    case "cloudy": return g(cloudPath(0,0));
+    case "rain": return g(cloudPath(0,-2)+`<line x1="-3" y1="4" x2="-3.8" y2="6.2"/><line x1="0.4" y1="4" x2="-0.4" y2="6.2"/><line x1="3.8" y1="4" x2="3" y2="6.2"/>`);
+    case "snow": return g(cloudPath(0,-2)+`<circle cx="-3.4" cy="5.2" r=".5"/><circle cx="0" cy="5.6" r=".5"/><circle cx="3.4" cy="5.2" r=".5"/>`);
+    case "thunder": return g(cloudPath(0,-2)+`<polyline points="0.6,2.6 -1.4,5.2 1,5.2 -0.6,7.4"/>`);
+    case "fog": return g(`<line x1="-6" y1="-2.5" x2="6" y2="-2.5"/><line x1="-6" y1="0.5" x2="6" y2="0.5"/><line x1="-6" y1="3.5" x2="6" y2="3.5"/>`); // half-pixel offsets keep the lines crisp
+    case "wind": return g(`<path d="M-6 -2.5 H3 A2 2 0 1 0 1 -4.5"/><path d="M-6 0.5 H5 A2 2 0 1 1 3 2.5"/><path d="M-6 3.5 H0"/>`);
+  }
+  return "";
+}
+function sunEventIcon(isSet,cx,cy,c){
+  const arrow=isSet?`M7 0 V4 M5 2.5 L7 4.5 L9 2.5`:`M7 4.5 V0.5 M5 2 L7 0 L9 2`;
+  return `<g transform="translate(${cx-7} ${cy-6})" stroke="${c}" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M2 9 A5 5 0 0 1 12 9"/><line x1="0" y1="11.5" x2="14" y2="11.5"/><path d="${arrow}"/></g>`;
+}
+function haloHead(cx,cy,eating,G){
+  return `<circle cx="${cx}" cy="${cy}" r="9" fill="${eating?'#FFF8EC':'#FFE6BF'}" filter="url(#${G})"/><circle cx="${cx}" cy="${cy}" r="3.2" fill="${eating?'#D9C9A8':'#FF7A1A'}"/>`;
+}
+
+function timeEl(d,width,above,below){
+  const [h,m]=derive(d).clock;
+  return `<text class="time" data-w="${width}" data-above="${above}" data-below="${below}" data-audit="time" data-center="1" x="${C}" y="${C}" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="60"><tspan fill="#fff">${h}</tspan><tspan fill="#FF9F1C">:${m}</tspan></text>`;
+}
+// time font size is fixed per face (65 / 59 px, as built for the watch); width only sets the reference
+const TIME_SIZE={dayring:65.1, halo:58.72};
+
+// subdial: base (disc, ticks outside the ring, track) is static; the fill is live
+function subdialBase(cx,cy,r,f0,f1,trk,w=4,tickCount=36){
   const disc=r+w/2+5;
   let s=`<circle cx="${cx}" cy="${cy}" r="${disc}" fill="#070707" stroke="#1f1f1f" stroke-width="1"/>`;
   const n=Math.round(tickCount*(f1-f0));
   for(let i=0;i<=n;i++){ const f=f0+(f1-f0)*i/n; if(f1-f0===1&&i===n) continue; const M=i%3===0;
     const [x0,y0]=ptC(cx,cy,r+w/2+1.2,f),[x1,y1]=ptC(cx,cy,r+w/2+(M?4:2.8),f);
     s+=`<line x1="${x0.toFixed(2)}" y1="${y0.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y1.toFixed(2)}" stroke="${M?'#5a5a5a':'#303030'}" stroke-width="${M?1.1:.8}"/>`; }
-  s+=`<path d="${arcC(cx,cy,r,f0,f1)}" stroke="${trk}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
-  if(cols.length) s+=gradArcC(cx,cy,r,f0,f0+(f1-f0)*frac,cols,w);
+  if(trk) s+=`<path d="${arcC(cx,cy,r,f0,f1)}" stroke="${trk}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
   return s;
 }
+const subdialFill=(cx,cy,r,f0,f1,frac,cols,w=4)=>frac>0?gradArcC(cx,cy,r,f0,f0+(f1-f0)*Math.min(1,frac),cols,w):"";
+const CREAM="#F2E3C6", CREAM_GRAD=["#6e6150","#D9C9A8","#F2E3C6","#FFF8EC"];
 
 // ============ DAY RING ============
-function dayF(h){ return (((h-12)/24)%1+1)%1; }
-function dayRing(){
-  const rise=7+41/60, set=16+31/60, now=10+9/60;
-  const fRise=dayF(rise), fSet=dayF(set)+1, fNow=dayF(now);
-  const G="g"+(uid++);
+const dayFm=m=>mod((m/60-12)/24,1);
+function dayRing(d){
+  const x=derive(d), G="g"+(uid++);
+  const fRise=dayFm(d.riseMin??360), fSet=dayFm(d.setMin??1080), fNow=dayFm(x.now);
+  const fSet2=fRise+mod(fSet-fRise,1);
   let s=`<defs>${GLOW(G)}</defs>`;
-  // 24h band
-  s+=gradArc(180,fSet-1,fRise,["#3448b0","#141f63","#0b1240","#141f63","#3448b0"],16,false);
-  s+=gradArc(180,fRise,fSet,["#5a4210","#b8862a","#e0b04a","#b8862a","#5a4210"],16,false);
-  for(let h=0;h<24;h++){ if(h%3===0) continue; const f=dayF(h); const [x0,y0]=pt(172,f),[x1,y1]=pt(188,f); s+=`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#000" stroke-width="1.4"/>`; }
-  for(let h=0;h<24;h+=3){ const f=dayF(h), bottom=f>.25&&f<.75; s+=ct(bottom?183.3:176.7,f,String(h).padStart(2,"0"),{s:9,w:800,f:"rgba(255,255,255,.9)",ls:0,span:.06}); }
-  for(const f of [fRise,fSet]){ const [x,y]=pt(180,f); s+=`<circle cx="${x}" cy="${y}" r="4.2" fill="${COL.sun}" stroke="#000" stroke-width="1.6"/>`; }
-  // fasting track
-  const fFS=dayF(20);
-  s+=track(165,fFS,1,"#3a2307",5);
-  s+=`<path d="${arc(165,0,fFS)}" stroke="#d8d8d8" stroke-width="2.6" stroke-dasharray="0.1 6" stroke-linecap="round" fill="none"/>`;
-  s+=`<g filter="url(#${G})">${gradArc(165,fFS,fNow,["#b23a06","#FF7A1A","#FFB347"],5)}</g>`;
-  s+=ct(153,fFS/2,"EAT 12–20",{s:7.5,f:"#bdbdbd",span:.08});
-  s+=ct(158.5,.6,"FASTING 88%",{s:7.5,f:COL.fast,span:.1});
-  { const [x0,y0]=pt(158,fNow),[x1,y1]=pt(191,fNow); s+=`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#fff" stroke-width="2.4" stroke-linecap="round" filter="url(#${G})"/>`;
-    const [hx,hy]=pt(165,fNow); s+=`<circle cx="${hx}" cy="${hy}" r="5" fill="#fff" stroke="#000" stroke-width="2"/>`; }
-  // inner gauges (mirror-symmetric: steps .11-.33, HR .67-.89, battery centred on 0)
-  s+=ticks(141,144,-.07,.07,10,"#383838",1,5,"#777");
-  s+=track(134,-.07,.07,"#11331b",7)+gradArc(134,-.07,-.07+.14*.82,["#1d7d36","#4CD964"],7);
-  s+=ct(119.5,0,"82% · 6 DAYS",{s:8.5,f:COL.batt,span:.12});
-  s+=ticks(141,144,.11,.33,10,"#383838",1,5,"#777");
-  s+=track(134,.11,.33,"#0a2a33",7)+gradArc(134,.11,.11+.22*.64,["#1f5fff","#3DD6F5"],7);
-  { const [x,y]=pt(134,.11+.22*.64); s+=`<circle cx="${x}" cy="${y}" r="2" fill="#fff"/>`; }
-  s+=ct(119.5,.22,"6,412 / 10K STEPS",{s:8.5,f:COL.steps,span:.14});
-  s+=ticks(141,144,.67,.89,10,"#383838",1,5,"#777");
-  s+=gradArc(134,.67,.89,["#3d7bff","#4CD964","#FFD60A","#FF9F1C","#FF3B30"],7);
-  { const f=.67+.22*((64-40)/150); const [x,y]=pt(134,f); s+=`<circle cx="${x}" cy="${y}" r="6.5" fill="#fff" stroke="#000" stroke-width="2.4" filter="url(#${G})"/>`; }
-  s+=ct(119.5,.78,"♥ 64 BPM",{s:8.5,f:COL.hr,span:.1});
+  // 24h band (changes daily with sunrise/sunset) — live
+  s+=D(gradArc(180,fSet2-1,fRise,["#3448b0","#141f63","#0b1240","#141f63","#3448b0"],16,false));
+  s+=D(gradArc(180,fRise,fSet2,["#5a4210","#b8862a","#e0b04a","#b8862a","#5a4210"],16,false));
+  for(let h=0;h<24;h++){ if(h%3===0) continue; const f=dayFm(h*60); const [x0,y0]=pt(172,f),[x1,y1]=pt(188,f); s+=D(`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#000" stroke-width="1.4"/>`); }
+  for(let h=0;h<24;h+=3){ const f=dayFm(h*60), bottom=f>.25&&f<.75; s+=D(ct(bottom?183.3:176.7,f,pad2(h),{s:9,w:800,f:"rgba(255,255,255,.9)",ls:0,span:.06})); }
+  if(d.riseMin!=null&&d.setMin!=null) for(const f of [fRise,fSet]){ const [px,py]=pt(180,f); s+=D(`<circle cx="${px}" cy="${py}" r="4.2" fill="${COL.sun}" stroke="#000" stroke-width="1.6"/>`); }
+  // fasting track (depends on settings) — live
+  const fE=dayFm(d.eatEnd), fS=dayFm(d.eatStart);
+  const fFastEnd=fE+mod(fS-fE,1), fEatEnd=fS+mod(fE-fS,1);
+  s+=D(track(165,fE,fFastEnd,"#3a2307",5));
+  s+=D(`<path d="${arc(165,fS,fEatEnd)}" stroke="#d8d8d8" stroke-width="2.6" stroke-dasharray="0.1 6" stroke-linecap="round" fill="none"/>`);
+  if(x.st&&!x.st.isEating) s+=D(`<g filter="url(#${G})">${gradArc(165,fE,fE+(fFastEnd-fE)*x.st.progress,["#b23a06","#FF7A1A","#FFB347"],5)}</g>`);
+  if(x.st&&x.st.isEating&&x.st.progress>0) s+=D(`<path d="${arc(165,fS,fS+(fEatEnd-fS)*x.st.progress)}" stroke="${CREAM}" stroke-width="5" stroke-linecap="round" fill="none"/>`);
+  s+=D(ct(153,(fS+fEatEnd)/2%1,`EAT ${F.windowLabel(d.eatStart,d.eatEnd)}`,{s:7.5,f:"#bdbdbd",span:.08}));
+  const pct=x.st?Math.round(x.st.progress*100)+"%":"--";
+  s+=D(ct(158.5,.6,`${x.st&&x.st.isEating?"EATING":"FASTING"} ${pct}`,{s:7.5,f:x.st&&x.st.isEating?CREAM:COL.fast,span:.1}));
+  { const [x0,y0]=pt(158,fNow),[x1,y1]=pt(191,fNow); s+=D(`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#fff" stroke-width="2.4" stroke-linecap="round" filter="url(#${G})"/>`);
+    const [hx,hy]=pt(165,fNow); s+=D(`<circle cx="${hx}" cy="${hy}" r="5" fill="#fff" stroke="#000" stroke-width="2"/>`); }
+  // inner gauges: scales, tracks and the HR zone arc are static; fills, markers and labels live
+  s+=S(ticks(141,144,-.07,.07,10,"#383838",1,5,"#777"));
+  s+=S(track(134,-.07,.07,"#11331b",7))+D(gradArc(134,-.07,-.07+.14*d.battery/100,["#1d7d36","#4CD964"],7));
+  s+=D(ct(119.5,0,d.batteryDays!=null?`${d.battery}% · ${d.batteryDays} DAYS`:`${d.battery}%`,{s:8.5,f:COL.batt,span:.12}));
+  const sf=Math.min(1,d.steps/d.stepGoal);
+  s+=S(ticks(141,144,.11,.33,10,"#383838",1,5,"#777"));
+  s+=S(track(134,.11,.33,"#0a2a33",7))+D(gradArc(134,.11,.11+.22*sf,["#1f5fff","#3DD6F5"],7));
+  { const [px,py]=pt(134,.11+.22*sf); s+=D(`<circle cx="${px}" cy="${py}" r="2" fill="#fff"/>`); }
+  s+=D(ct(119.5,.22,`${F.thousands(d.steps)} / ${F.kilo(d.stepGoal)} STEPS`,{s:8.5,f:COL.steps,span:.14}));
+  s+=S(ticks(141,144,.67,.89,10,"#383838",1,5,"#777"));
+  s+=S(gradArc(134,.67,.89,["#3d7bff","#4CD964","#FFD60A","#FF9F1C","#FF3B30"],7));
+  if(d.hr!=null){ const f=.67+.22*hrFrac(d.hr); const [px,py]=pt(134,f); s+=D(`<circle cx="${px}" cy="${py}" r="6.5" fill="#fff" stroke="#000" stroke-width="2.4" filter="url(#${G})"/>`); }
+  s+=D(ct(119.5,.78,`♥ ${d.hr??"--"} BPM`,{s:8.5,f:COL.hr,span:.1}));
   // centre column
-  s+=vt(C,99,"WED 18 NOV",{s:12,w:700,f:"#e6e6e6",ls:3.5,id:"date",center:1});
-  s+=row("sunset","center",C, sunsetIcon(7,0,COL.sun)+vt(20,0,"16:31",{a:"start",s:11.5,w:600,f:COL.sun})+vt(55,0,"SUNSET",{a:"start",s:8,w:600,f:"#8a7440",ls:1.2})).replace('data-x="'+C+'"','data-x="'+C+'" data-y="118"');
-  s+=timeEl(204,"sunset","pill");
-  s+=`<g data-audit="pill" data-center="1"><rect x="${C-67}" y="${219-9.5}" width="134" height="19" rx="9.5" fill="#1f1406" stroke="#4a2c08" stroke-width="1"/>`+vt(C,219,"EAT IN 1H 51M",{s:10.5,w:700,f:COL.fast,ls:1.6})+`</g>`;
-  s+=vt(C-8+1.2,242,"4.8 KM",{a:"end",s:10.5,w:600,ls:1.2,f:"#cfcfcf",id:"km"})+`<circle cx="${C}" cy="242" r="1.6" fill="#555"/>`+vt(C+8,242,"172.8 LB",{a:"start",s:10.5,w:600,ls:1.2,f:"#9a9a9a",id:"kg"});
-  // subdials, mirrored about the centre line
+  s+=D(vt(C,99,`${d.dayName} ${d.dayNum} ${d.monthName}`,{s:12,w:700,f:"#e6e6e6",ls:3.5,id:"date",center:1}));
+  const isSet=x.sun?x.sun[0]:true, sunTxt=x.sun?F.hhmm(x.sun[1],d.is24):"--:--";
+  s+=D(row("sunset","center",C, sunEventIcon(isSet,7,0,COL.sun)+vt(20,0,sunTxt,{a:"start",s:11.5,w:600,f:COL.sun})+`<g class="after" data-gap="6.9">`+vt(0,0,isSet?"SUNSET":"SUNRISE",{a:"start",s:8,w:600,f:"#8a7440",ls:1.2})+`</g>`).replace('data-x="'+C+'"','data-x="'+C+'" data-y="118" data-center="1"'));
+  s+=D(timeEl(d,204,"sunset","pill"));
+  const eat=x.st&&x.st.isEating;
+  s+=`<g data-audit="pill" data-center="1">`+S(`<rect x="${C-67}" y="${219-9.5}" width="134" height="19" rx="9.5" fill="#1f1406" stroke="#4a2c08" stroke-width="1"/>`)+D(vt(C,219,x.leftLabel,{s:10.5,w:700,f:eat?CREAM:COL.fast,ls:1.6}))+`</g>`;
+  s+=D(vt(C-8+1.2,242,`${x.dist} ${x.unit}`,{a:"end",s:10.5,w:600,ls:1.2,f:"#cfcfcf",id:"km"}))+S(`<circle cx="${C}" cy="242" r="1.6" fill="#555"/>`)+D(vt(C+8,242,`${F.lb(d.weightG)} LB`,{a:"start",s:10.5,w:600,ls:1.2,f:"#9a9a9a",id:"kg"}));
+  // subdials
   const sy=293, dx=56;
-  s+=subdial(C-dx,sy,26,0,1,640/2180,["#a3164f","#FF5FA2"],"#2a0f1d",4);
+  s+=S(subdialBase(C-dx,sy,26,0,1,"#2a0f1d",4));
+  s+=D(subdialFill(C-dx,sy,26,0,1,d.kcalActive!=null?d.kcalActive/d.kcalTotal:0,["#a3164f","#FF5FA2"],4));
   s+=`<g data-dial="${C-dx},${sy},24" data-items="kcal-l kcal-v kcal-t"/><g data-dial="${C+dx},${sy},24" data-items="wx-v"/>`;
-  s+=vt(C-dx,sy-13.5,"KCAL",{s:6.5,w:700,f:"#8a8a8a",ls:1,id:"kcal-l"})+vt(C-dx,sy,"640",{s:14,w:700,f:COL.kcal,id:"kcal-v"})+vt(C-dx,sy+13.5,"/2,180",{s:7,w:500,f:"#8a8a8a",id:"kcal-t"});
-  s+=subdial(C+dx,sy,26,.625,1.375,0,[],"#000",4,36);
-  s+=gradArcC(C+dx,sy,26,.625,1.375,["#3DA5FF","#4CD964","#FFD60A"],4);
-  { const f=.625+.75*((12-6)/8); const [x,y]=ptC(C+dx,sy,26,f); s+=`<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="#000" stroke-width="1.6"/>`; }
-  s+=sunIcon(C+dx,sy-12,COL.wx,.72)+vt(C+dx,sy+2,`12<tspan>°</tspan>`,{s:14,w:700,f:COL.wx,deg:1,id:"wx-v"});
-  s+=vt(C+dx-8,sy+19,`6<tspan>°</tspan>`,{s:7,w:600,f:"#8a8a8a",deg:1,id:"wx-lo"})+vt(C+dx+8,sy+19,`14<tspan>°</tspan>`,{s:7,w:600,f:"#8a8a8a",deg:1,id:"wx-hi"});
+  s+=D(vt(C-dx,sy-13.5,"KCAL",{s:6.5,w:700,f:"#8a8a8a",ls:1,id:"kcal-l"})+vt(C-dx,sy,F.thousands(d.kcalActive??d.kcalTotal),{s:14,w:700,f:COL.kcal,id:"kcal-v"}));
+  if(d.kcalActive!=null) s+=D(vt(C-dx,sy+13.5,`/${F.thousands(d.kcalTotal)}`,{s:7,w:500,f:"#8a8a8a",id:"kcal-t"}));
+  s+=S(subdialBase(C+dx,sy,26,.625,1.375,null,4,36));
+  s+=S(gradArcC(C+dx,sy,26,.625,1.375,["#3DA5FF","#4CD964","#FFD60A"],4));
+  if(d.tempC!=null){ const fr=d.hiC===d.loC?.5:clamp01((d.tempC-d.loC)/(d.hiC-d.loC)); const [px,py]=ptC(C+dx,sy,26,.625+.75*fr); s+=D(`<circle cx="${px}" cy="${py}" r="4" fill="#fff" stroke="#000" stroke-width="1.6"/>`); }
+  if(x.wxIcon) s+=D(wxIcon(x.wxIcon,C+dx,sy-12,COL.wx,.72));
+  s+=D(vt(C+dx,sy+2,`${F.temp(d.tempC,d.fahrenheit)}<tspan>°</tspan>`,{s:14,w:700,f:COL.wx,deg:1,id:"wx-v"}));
+  const [c1x,c1y]=ptC(C+dx,sy,26,.625), [c2x,c2y]=ptC(C+dx,sy,26,.375), caps=[c1x,c1y,c2x,c2y,2];
+  const lo=F.temp(d.loC,d.fahrenheit), hi=F.temp(d.hiC,d.fahrenheit), LOHI=t=>[{s:7,w:600,ls:0},{s:7,w:600,ls:0,t}];
+  s+=D(vt(C+dx-8,sy+19,`${lo}<tspan>°</tspan>`,{s:7,w:600,f:"#8a8a8a",deg:1,id:"wx-lo",fit:LOHI(lo),fitCaps:caps})+vt(C+dx+8,sy+19,`${hi}<tspan>°</tspan>`,{s:7,w:600,f:"#8a8a8a",deg:1,id:"wx-hi",fit:LOHI(hi),fitCaps:caps}));
   return s;
 }
 
 // ============ HALO ============
-function halo(){
-  const ff=14.15/16, G="g"+(uid++);
+function halo(d){
+  const x=derive(d), G="g"+(uid++);
   let s=`<defs>${GLOW(G)}<filter id="${G}b" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter></defs>`;
-  for(let r=8;r<=122;r+=4.5) s+=`<circle cx="${C}" cy="${C}" r="${r}" fill="none" stroke="#111113" stroke-width=".8"/>`;
-  s+=`<circle cx="${C}" cy="${C}" r="189.5" fill="none" stroke="#1c1c1c" stroke-width="1"/>`;
+  for(let r=8;r<=122;r+=4.5) s+=S(`<circle cx="${C}" cy="${C}" r="${r}" fill="none" stroke="#111113" stroke-width=".8"/>`);
+  s+=S(`<circle cx="${C}" cy="${C}" r="189.5" fill="none" stroke="#1c1c1c" stroke-width="1"/>`);
   for(let i=0;i<60;i++){ const M=i%5===0; const [x0,y0]=pt(M?179:182.5,i/60),[x1,y1]=pt(188,i/60);
-    s+=`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${M?'#bdbdbd':'#4a4a4a'}" stroke-width="${M?2:1}"/>`; }
-  for(let h=1;h<=12;h++){ const [x,y]=pt(167,h/12); s+=vt(x.toFixed(2),y.toFixed(2),h,{s:h%3===0?12:10.5,w:h%3===0?600:400,f:h===12?'#d0d0d0':'#6e6e6e'}); }
-  s+=ticks(139.5,143.5,0,1,16,"#3a3a3a",1.1,4,"#7a7a7a",1.6);
-  s+=`<circle cx="${C}" cy="${C}" r="130" fill="none" stroke="#1d1306" stroke-width="9"/>`;
-  s+=`<g filter="url(#${G}b)" opacity=".55">${gradArc(130,0,ff,["#7a1f00","#FF6A00","#FFB347"],10)}</g>`;
-  s+=gradArc(130,0,ff,["#9a2a03","#FF6A00","#FF9F1C","#FFCF7A"],9);
-  { const [x,y]=pt(130,0); s+=`<rect x="${x-2}" y="${y-8}" width="4" height="16" rx="2" fill="#fff"/>`; }
-  { const [x,y]=pt(130,ff); s+=`<circle cx="${x}" cy="${y}" r="9" fill="#FFE6BF" filter="url(#${G})"/><circle cx="${x}" cy="${y}" r="3.2" fill="#FF7A1A"/>`; }
-  s+=ct(148,.865,"FASTING · 14H 09M / 16H",{s:8.5,f:COL.fast,span:.16});
-  s+=ct(148,.135,"☀ SUNSET 16:31",{s:8.5,f:COL.sun,span:.12});
-  s+=ctAt(157,.5,"4.8 KM","end",-8,{s:8.5,f:"#a5a5a5",span:.14})+ctAt(157,.5,"·","middle",0,{s:8.5,f:"#a5a5a5",span:.14,ls:0})+ctAt(157,.5,"172.8 LB","start",8,{s:8.5,f:"#a5a5a5",span:.14});
+    s+=S(`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${M?'#bdbdbd':'#4a4a4a'}" stroke-width="${M?2:1}"/>`); }
+  for(let h=1;h<=12;h++){ const [px,py]=pt(167,h/12); s+=S(vt(px.toFixed(2),py.toFixed(2),h,{s:h%3===0?12:10.5,w:h%3===0?600:400,f:h===12?'#d0d0d0':'#6e6e6e'})); }
+  s+=S(ticks(139.5,143.5,0,1,16,"#3a3a3a",1.1,4,"#7a7a7a",1.6));
+  s+=S(`<circle cx="${C}" cy="${C}" r="130" fill="none" stroke="#1d1306" stroke-width="9"/>`);
+  const eat=x.st&&x.st.isEating;
+  if(x.st&&x.st.progress>0){
+    const p=x.st.progress, glow=eat?["#5a5040","#D9C9A8","#FFF8EC"]:["#7a1f00","#FF6A00","#FFB347"], cols=eat?CREAM_GRAD:["#9a2a03","#FF6A00","#FF9F1C","#FFCF7A"];
+    s+=D(`<g filter="url(#${G}b)" opacity=".55">${gradArc(130,0,p,glow,10)}</g>`)+D(gradArc(130,0,p,cols,9));
+  }
+  { const [px,py]=pt(130,0); s+=D(`<rect x="${px-2}" y="${py-8}" width="4" height="16" rx="2" fill="#fff"/>`); }
+  if(x.st){ const [px,py]=pt(130,x.st.progress); s+=D(haloHead(px,py,eat,G)); }
+  const stLabel=x.st?`${eat?"EATING":"FASTING"} · ${F.duration(x.st.elapsed)} / ${F.duration(x.st.total)}`:"FASTING · --";
+  s+=D(ct(148,.865,stLabel,{s:8.5,f:eat?CREAM:COL.fast,span:.16}));
+  const isSet=x.sun?x.sun[0]:true;
+  s+=D(ct(148,.135,`☀ ${isSet?"SUNSET":"SUNRISE"} ${x.sun?F.hhmm(x.sun[1],d.is24):"--:--"}`,{s:8.5,f:COL.sun,span:.12}));
+  s+=D(ctAt(157,.5,`${x.dist} ${x.unit}`,"end",-8,{s:8.5,f:"#a5a5a5",span:.14})+ctAt(157,.5,"·","middle",0,{s:8.5,f:"#a5a5a5",span:.14,ls:0})+ctAt(157,.5,`${F.lb(d.weightG)} LB`,"start",8,{s:8.5,f:"#a5a5a5",span:.14}));
   // centre column
-  s+=vt(C,96,"EAT IN 1H 51M",{s:11,w:700,f:COL.fast,ls:2,id:"eat",center:1});
-  s+=vt(C,122,`<tspan fill="#fff" font-weight="700">18</tspan><tspan fill="#8a8a8a" font-weight="500" dx="6" letter-spacing="2">WED</tspan>`,{s:15,id:"date",center:1});
-  s+=timeEl(184,"date","hrwx");
-  // HR + weather row: left block right-aligned to the divider, right block left-aligned
+  s+=D(vt(C,96,x.leftLabel,{s:11,w:700,f:eat?CREAM:COL.fast,ls:2,id:"eat",center:1}));
+  s+=D(vt(C,122,`<tspan fill="#fff" font-weight="700">${d.dayNum}</tspan><tspan fill="#8a8a8a" font-weight="500" dx="6" letter-spacing="2">${d.dayName}</tspan>`,{s:15,id:"date",center:1}));
+  s+=D(timeEl(d,184,"date","hrwx"));
   const ry=214;
-  const hrs=[72,70,68,66,65,63,62,64,70,84,93,88,77,71,68,66,64,63,66,68,65,62,63,64];
-  const sw=34, sh=16, mn=58, mx=96; let d="";
-  hrs.forEach((v,i)=>{ const x=50+sw*i/(hrs.length-1), y=sh/2-sh*(v-mn)/(mx-mn); d+=(i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1)+" "; });
-  const lastY=sh/2-sh*(64-mn)/(mx-mn);
-  let hrRow=heart(6,0,COL.hr)+vt(17,0,"64",{a:"start",s:15,w:700,f:COL.hr})+`<path d="${d}" fill="none" stroke="${COL.hr}" stroke-width="1.3" stroke-linejoin="round" opacity=".85"/><circle cx="${50+sw}" cy="${lastY}" r="2" fill="#fff"/>`;
-  s+=`<g class="cgroup" data-audit="hrwx" data-center="1">`;
-  s+=row("hr","right",C-9,hrRow).replace('data-x="'+(C-9)+'"','data-x="'+(C-9)+'" data-y="'+ry+'"').replace(' data-audit="hr"','');
-  s+=`<line x1="${C}" y1="${ry-8}" x2="${C}" y2="${ry+8}" stroke="#2a2a2a"/>`;
-  let wxRow=sunIcon(7,0,COL.wx)+vt(20,0,`12<tspan>°</tspan>`,{a:"start",s:15,w:700,f:COL.wx})+vt(50,-4.5,"H 14°",{a:"start",s:7.5,w:600,f:"#8a8a8a"})+vt(50,4.5,"L 6°",{a:"start",s:7.5,w:600,f:"#8a8a8a"});
-  s+=row("wx","left",C+9,wxRow).replace('data-x="'+(C+9)+'"','data-x="'+(C+9)+'" data-y="'+ry+'"').replace(' data-audit="wx"','');
-  s+=`</g>`;
-  // three equal subdials on one line, mirrored about the centre
+  let hrRow=heart(6,0,COL.hr)+vt(17,0,d.hr??"--",{a:"start",s:15,w:700,f:COL.hr});
+  if(d.hrHistory){ const sw=34, sh=16, mn=58, mx=96, h=d.hrHistory; let p="";
+    // sparkline sits 8 px after the HR value; placed by layout() via data-after
+    h.forEach((v,i)=>{ const px=sw*i/(h.length-1), py=sh/2-sh*(clamp01((v-mn)/(mx-mn))); p+=(i?"L":"M")+px.toFixed(1)+" "+py.toFixed(1)+" "; });
+    const ly=sh/2-sh*clamp01((h[h.length-1]-mn)/(mx-mn));
+    hrRow+=`<g class="after" data-gap="13.5"><path d="${p}" fill="none" stroke="${COL.hr}" stroke-width="1.3" stroke-linejoin="round" opacity=".85"/><circle cx="${sw}" cy="${ly}" r="2" fill="#fff"/></g>`; }
+  s+=D(`<g class="cgroup" data-audit="hrwx" data-center="1">`
+    +row("hr","right",C-9,hrRow).replace('data-x="'+(C-9)+'"','data-x="'+(C-9)+'" data-y="'+ry+'"').replace(' data-audit="hr"','')
+    +`<line class="divider" x1="${C}" y1="${ry-8}" x2="${C}" y2="${ry+8}" stroke="#2a2a2a"/>`
+    +row("wx","left",C+9,(x.wxIcon?wxIcon(x.wxIcon,7,0,COL.wx):"")+vt(x.wxIcon?20:0,0,`${F.temp(d.tempC,d.fahrenheit)}<tspan>°</tspan>`,{a:"start",s:15,w:700,f:COL.wx})
+        +`<g class="after" data-gap="3">${vt(0,-4.5,`H ${F.temp(d.hiC,d.fahrenheit)}°`,{a:"start",s:7.5,w:600,f:"#8a8a8a"})+vt(0,4.5,`L ${F.temp(d.loC,d.fahrenheit)}°`,{a:"start",s:7.5,w:600,f:"#8a8a8a"})}</g>`)
+       .replace('data-x="'+(C+9)+'"','data-x="'+(C+9)+'" data-y="'+ry+'"').replace(' data-audit="wx"','')
+    +`</g>`);
+  // three equal subdials
   const sy=263, dx=60, r=19.5;
-  for(const [x,ids] of [[C-dx,"s1v s1t"],[C,"s2v s2t"],[C+dx,"s3v s3t"]]) s+=`<g data-dial="${x},${sy},${r-1.75}" data-items="${ids}"/>`;
-  s+=subdial(C-dx,sy,r,0,1,640/2180,["#a3164f","#FF5FA2"],"#2a0f1d",3.5);
-  s+=vt(C-dx,sy-4.75,"640",{s:11,w:700,f:COL.kcal,id:"s1v"})+vt(C-dx,sy+6.75,"/2180",{s:6,w:500,f:"#8a8a8a",id:"s1t"});
-  s+=subdial(C,sy,r,0,1,.64,["#1f5fff","#3DD6F5"],"#0a2a33",3.5);
-  s+=vt(C,sy-4.75,"6.4K",{s:11,w:700,f:COL.steps,id:"s2v",center:1})+vt(C,sy+6.75,"STEPS",{s:6,w:600,f:"#8a8a8a",ls:.8,id:"s2t",center:1});
-  s+=subdial(C+dx,sy,r,0,1,.82,["#1d7d36","#4CD964"],"#11331b",3.5);
-  s+=vt(C+dx,sy-4.75,"82%",{s:11,w:700,f:COL.batt,id:"s3v"})+vt(C+dx,sy+6.75,"6 DAYS",{s:6,w:600,f:"#8a8a8a",ls:.5,id:"s3t"});
+  for(const [px,ids] of [[C-dx,"s1v s1t"],[C,"s2v s2t"],[C+dx,"s3v s3t"]]) s+=`<g data-dial="${px},${sy},${r-1.75}" data-items="${ids}"/>`;
+  s+=S(subdialBase(C-dx,sy,r,0,1,"#2a0f1d",3.5))+D(subdialFill(C-dx,sy,r,0,1,d.kcalActive!=null?d.kcalActive/d.kcalTotal:0,["#a3164f","#FF5FA2"],3.5));
+  const VFIT=[{s:11,w:700,ls:0},{s:9,w:700,ls:0}], LFIT=(ls)=>[{s:6,w:600,ls},{s:6,w:600,ls:0}];
+  const fd=x0=>[x0,sy,r-1.75];
+  if(d.kcalActive!=null) s+=D(vt(C-dx,sy-4.75,F.thousands(d.kcalActive),{s:11,w:700,f:COL.kcal,id:"s1v",fit:VFIT,fitDial:fd(C-dx)})+vt(C-dx,sy+6.75,`/${d.kcalTotal}`,{s:6,w:500,f:"#8a8a8a",id:"s1t"}));
+  else s+=D(vt(C-dx,sy,F.thousands(d.kcalTotal),{s:11,w:700,f:COL.kcal,id:"s1v",fit:VFIT,fitDial:fd(C-dx)}));
+  s+=S(subdialBase(C,sy,r,0,1,"#0a2a33",3.5))+D(subdialFill(C,sy,r,0,1,d.steps/d.stepGoal,["#1f5fff","#3DD6F5"],3.5));
+  s+=D(vt(C,sy-4.75,F.kilo(d.steps),{s:11,w:700,f:COL.steps,id:"s2v",center:1,fit:VFIT,fitDial:fd(C)})+vt(C,sy+6.75,"STEPS",{s:6,w:600,f:"#8a8a8a",ls:.8,id:"s2t",center:1}));
+  s+=S(subdialBase(C+dx,sy,r,0,1,"#11331b",3.5))+D(subdialFill(C+dx,sy,r,0,1,d.battery/100,["#1d7d36","#4CD964"],3.5));
+  if(d.batteryDays!=null) s+=D(vt(C+dx,sy-4.75,`${d.battery}%`,{s:11,w:700,f:COL.batt,id:"s3v",fit:VFIT,fitDial:fd(C+dx)})+vt(C+dx,sy+6.75,`${d.batteryDays} DAYS`,{s:6,w:600,f:"#8a8a8a",ls:.5,id:"s3t",fit:LFIT(.5),fitDial:fd(C+dx)}));
+  else s+=D(vt(C+dx,sy,`${d.battery}%`,{s:11,w:700,f:COL.batt,id:"s3v",fit:VFIT,fitDial:fd(C+dx)}));
   return s;
 }
 
-const faces=[{name:"Day Ring", svg:dayRing()},{name:"Halo", svg:halo()}];
+// ---------- page modes ----------
+// ?face=dayring|halo&state=<name>&layer=full|base  → one bare 390×390 face (export)
+// ?sprites=1                                         → icon sprites on transparent backgrounds (export)
+// (no params)                                        → gallery of both faces in every state
+const FACES={dayring:dayRing, halo:halo};
 const grid=document.getElementById("grid");
-for(const f of faces){ const el=document.createElement("div"); el.className="card";
-  el.innerHTML=`<div class="watch"><svg viewBox="0 0 390 390" data-face="${f.name}">${f.svg}</svg></div><div class="label">${f.name}</div>`; grid.appendChild(el); }
+if(PARAMS.get("sprites")){
+  document.body.className="export"; document.querySelector("h1").remove();
+  document.documentElement.style.background="transparent"; document.body.style.background="transparent";
+  const sp=[]; const add=(name,w,h,inner)=>sp.push(`<svg data-sprite="${name}" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${inner}</svg>`);
+  add("heart_12",14,13,heart(7,6.5,COL.hr));
+  add("sunset_14",16,14,sunEventIcon(true,8,7,COL.sun)); add("sunrise_14",16,14,sunEventIcon(false,8,7,COL.sun));
+  add("halo_head_fast",40,40,`<defs>${GLOW("hf")}</defs>`+haloHead(20,20,false,"hf"));
+  add("halo_head_eat",40,40,`<defs>${GLOW("he")}</defs>`+haloHead(20,20,true,"he"));
+  for(const n of ["clear","clear_night","partly","cloudy","rain","snow","thunder","fog","wind"]){ add(`wx_${n}_14`,18,18,wxIcon(n,9,9,COL.wx)); add(`wx_${n}_10`,14,14,wxIcon(n,7,7,COL.wx,.72)); }
+  grid.outerHTML=`<div id="sprites">${sp.join("")}</div>`;
+} else if(PARAMS.get("face")){
+  document.body.className="export"; document.querySelector("h1").remove();
+  const st=STATES.find(s=>s.name===(PARAMS.get("state")||"reference"));
+  grid.outerHTML=`<svg id="face" width="390" height="390" viewBox="0 0 390 390" data-face="${PARAMS.get("face")}" data-state="${st.name}" style="background:#000">${FACES[PARAMS.get("face")](st)}</svg>`;
+} else {
+  for(const st of STATES) for(const [k,fn] of Object.entries(FACES)){ const el=document.createElement("div"); el.className="card";
+    el.innerHTML=`<div class="watch"><svg viewBox="0 0 390 390" data-face="${k}" data-state="${st.name}">${fn(st)}</svg></div><div class="label">${k==="dayring"?"Day Ring":"Halo"} · ${st.name}</div>`; grid.appendChild(el); }
+}
 
 // ---------- layout pass: measure real glyph ink and position precisely ----------
 const cv=document.createElement("canvas").getContext("2d");
@@ -214,9 +347,25 @@ function layout(svg){
     const cy=+el.dataset.cy, cx=+el.dataset.cx, {asc,desc}=ink(el, el.textContent);
     el.setAttribute("y",(cy+(asc-desc)/2).toFixed(2));
     if(el.dataset.deg){ // centre the digits; let the degree sign hang to the right
-      const n=el.textContent.length; const digits=el.getSubStringLength(0,n-1);
+      const n=el.textContent.length, hasDeg=el.textContent.endsWith("°"); const digits=hasDeg?el.getSubStringLength(0,n-1):el.getComputedTextLength();
       const a=el.dataset.a; el.setAttribute("x",(a==="start"?cx:cx-digits/2).toFixed(2));
     }
+  }
+  // 1a. shrink-to-fit inside a subdial: first option whose ink corners stay inside (free radius - 1)
+  for(const el of svg.querySelectorAll("text[data-fit]")){
+    const cy=+el.dataset.cy, cx=+el.dataset.cx;
+    for(const opt of JSON.parse(el.dataset.fit)){
+      el.setAttribute("font-size",opt.s); el.setAttribute("font-weight",opt.w); el.setAttribute("letter-spacing",opt.ls);
+      if(opt.t!==undefined) el.textContent=opt.t;
+      const {asc,desc}=ink(el,el.textContent); el.setAttribute("y",(cy+(asc-desc)/2).toFixed(2));
+      if(el.dataset.deg){ const n=el.textContent.length, hasDeg=el.textContent.endsWith("°"); const digits=hasDeg?el.getSubStringLength(0,n-1):el.getComputedTextLength(); el.setAttribute("x",(cx-digits/2).toFixed(2)); }
+      if(fitsOK(el)) break;
+    }
+  }
+  // 1b. 'after' groups sit a fixed gap after everything before them in their row
+  for(const g of svg.querySelectorAll("g.after")){
+    let R=-1e9; for(let p=g.previousElementSibling;p;p=p.previousElementSibling){ const bb=p.getBBox(); const t=p.transform&&p.transform.baseVal.consolidate(); R=Math.max(R,bb.x+bb.width+(t?t.matrix.e:0)); }
+    g.setAttribute("transform",`translate(${(R+ +g.dataset.gap).toFixed(2)} 0)`);
   }
   // 2. rows: place group, then align horizontally using its real bbox
   for(const g of svg.querySelectorAll("g.row")){
@@ -231,14 +380,22 @@ function layout(svg){
   for(const g of svg.querySelectorAll("g.cgroup")){ const bb=g.getBBox(); g.setAttribute("transform",`translate(${(C-(bb.x+bb.width/2)).toFixed(2)} 0)`); }
   // 3. time: scale to target width, then centre its ink exactly between its neighbours
   for(const el of svg.querySelectorAll("text.time")){
-    const len=el.getComputedTextLength(); const fs=60*(+el.dataset.w)/len; el.setAttribute("font-size",fs.toFixed(2));
+    el.setAttribute("font-size",TIME_SIZE[svg.dataset.face]);
     const box=id=>{ const n=svg.querySelector(`[data-audit="${id}"]`); const b=n.getBBox(); const m=n.getCTM? n.transform.baseVal.consolidate():null; const ty=m?m.matrix.f:0; return {top:b.y+ty, bottom:b.y+b.height+ty}; };
     const above=svg.querySelector(`[data-audit="${el.dataset.above}"]`), below=svg.querySelector(`[data-audit="${el.dataset.below}"]`);
     const inkBox=n=>inkBounds(n);
     const a=inkBox(above), b=inkBox(below);
-    const mid=(a.bottom+b.top)/2; const {asc,desc}=ink(el,"10:09");
+    const mid=(a.bottom+b.top)/2; const {asc,desc}=ink(el,el.textContent);
     el.setAttribute("y",(mid+(asc-desc)/2).toFixed(2));
   }
+}
+// fit test shared by layout() and audit(): inside the dial's free radius, clear of arc end caps
+function fitsOK(el){
+  const b=inkBounds(el), corners=[[b.left,b.top],[b.right,b.top],[b.left,b.bottom],[b.right,b.bottom]];
+  if(el.dataset.fitdial){ const [dx,dy,rin]=el.dataset.fitdial.split(",").map(Number); if(!corners.every(([x,y])=>Math.hypot(x-dx,y-dy)<=rin-1)) return false; }
+  if(el.dataset.fitcaps){ const c=el.dataset.fitcaps.split(",").map(Number);
+    for(const [px,py] of [[c[0],c[1]],[c[2],c[3]]]){ const nx=Math.max(b.left,Math.min(px,b.right)), ny=Math.max(b.top,Math.min(py,b.bottom)); if(Math.hypot(nx-px,ny-py)<c[4]+1) return false; } }
+  return true;
 }
 // ink bounds of an audited node (text: real glyph ink; groups: union of children)
 function inkBounds(n){
@@ -259,21 +416,25 @@ function inkBounds(n){
 }
 // ---------- audit: centring, overlaps, edge clearance ----------
 function audit(svg){
+  const dialItems=new Set([...svg.querySelectorAll("[data-dial]")].flatMap(d=>d.dataset.items.split(" ")).concat(["wx-lo","wx-hi"]));
   const out=[]; const items=[...svg.querySelectorAll("[data-audit]")].map(n=>({id:n.dataset.audit,n,b:inkBounds(n),center:!!n.dataset.center}));
   for(const it of items){ if(it.center){ const off=((it.b.left+it.b.right)/2-C); if(Math.abs(off)>0.75) out.push(`OFF-CENTRE ${it.id}: ${off.toFixed(2)}px`); } }
   for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){ const a=items[i].b,b=items[j].b;
     const ox=Math.min(a.right,b.right)-Math.max(a.left,b.left), oy=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
     if(ox>-2&&oy>-2) out.push(`TOO CLOSE ${items[i].id} / ${items[j].id}: overlap x ${ox.toFixed(1)}, y ${oy.toFixed(1)}`); }
-  for(const it of items){ for(const [x,y] of [[it.b.left,it.b.top],[it.b.right,it.b.top],[it.b.left,it.b.bottom],[it.b.right,it.b.bottom]]){ const r=Math.hypot(x-C,y-C); if(r>118 && !it.id.startsWith("s")&&!it.id.startsWith("kcal")&&!it.id.startsWith("wx")) { out.push(`NEAR RING ${it.id}: corner at r=${r.toFixed(1)}`); break; } } }
+  for(const it of items){ for(const [x,y] of [[it.b.left,it.b.top],[it.b.right,it.b.top],[it.b.left,it.b.bottom],[it.b.right,it.b.bottom]]){ const r=Math.hypot(x-C,y-C); if(r>(svg.dataset.face==="halo"?121:118) && !dialItems.has(it.id)) { out.push(`NEAR RING ${it.id}: corner at r=${r.toFixed(1)}`); break; } } }
+  for(const el of svg.querySelectorAll("text[data-fit]")) if(!fitsOK(el)) out.push(`DOES NOT FIT ${el.dataset.audit||el.textContent}`);
   for(const d of svg.querySelectorAll("[data-dial]")){ const [cx,cy,rin]=d.dataset.dial.split(",").map(Number);
     for(const id of d.dataset.items.split(" ")){ const it=items.find(i=>i.id===id); if(!it) continue; const b=it.b;
       for(const [x,y] of [[b.left,b.top],[b.right,b.top],[b.left,b.bottom],[b.right,b.bottom]]){ const r=Math.hypot(x-cx,y-cy); if(r>rin-1){ out.push(`TOUCHES DIAL ${id}: corner r=${r.toFixed(1)} vs free radius ${rin}`); break; } } } }
-  return {issues:out, boxes:Object.fromEntries(items.map(i=>[i.id,Object.fromEntries(Object.entries(i.b).map(([k,v])=>[k,+v.toFixed(1)]))]))};
+  return {issues:out, boxes:Object.fromEntries(items.map(i=>[i.id,{...Object.fromEntries(Object.entries(i.b).map(([k,v])=>[k,+v.toFixed(1)])), text:i.n.textContent.replace(/\s+/g," ").trim(), center:i.center}]))};
 }
 window.AUDIT=null;
 Promise.all(["900 20px Orbitron","400 20px Inter","500 20px Inter","600 20px Inter","700 20px Inter","800 20px Inter"].map(f=>document.fonts.load(f))).then(()=>{
   const res={};
-  for(const svg of document.querySelectorAll("svg[data-face]")){ layout(svg); res[svg.dataset.face]=audit(svg); }
+  if(LAYER!=="base") for(const svg of document.querySelectorAll("svg[data-face]")){ layout(svg); res[`${svg.dataset.face}-${svg.dataset.state}`]=audit(svg); }
+  const widths={}; for(const t of document.querySelectorAll("text")) if(t.querySelector("textPath")) widths[t.textContent]=+t.getComputedTextLength().toFixed(2);
+  window.TEXT_WIDTHS=widths;
   window.AUDIT=res;
 });
 </script>

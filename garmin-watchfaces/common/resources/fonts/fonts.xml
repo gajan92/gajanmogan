@@ -13,6 +13,7 @@
     <font id="DR_KCAL" filename="dr_kcal.fnt" antialias="true"/>
     <font id="DR_WXLOHI" filename="dr_wxlohi.fnt" antialias="true"/>
     <font id="HA_B11" filename="ha_b11.fnt" antialias="true"/>
+    <font id="HA_B9" filename="ha_b9.fnt" antialias="true"/>
     <font id="HA_B15" filename="ha_b15.fnt" antialias="true"/>
     <font id="HA_DAY" filename="ha_day.fnt" antialias="true"/>
     <font id="HA_SUBLABEL" filename="ha_sublabel.fnt" antialias="true"/>

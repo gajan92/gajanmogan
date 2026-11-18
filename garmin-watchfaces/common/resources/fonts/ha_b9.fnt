@@ -1,0 +1,20 @@
+info face="Inter-700" size=9 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1
+common lineHeight=12 base=9 scaleW=512 scaleH=8 pages=1 packed=0
+page id=0 file="ha_b9_0.png"
+chars count=16
+char id=75 x=0 y=0 width=7 height=7 xoffset=0 yoffset=2 xadvance=6 page=0 chnl=15
+char id=37 x=8 y=0 width=9 height=7 xoffset=0 yoffset=2 xadvance=9 page=0 chnl=15
+char id=48 x=18 y=0 width=7 height=7 xoffset=0 yoffset=2 xadvance=6 page=0 chnl=15
+char id=49 x=26 y=0 width=4 height=7 xoffset=0 yoffset=2 xadvance=4 page=0 chnl=15
+char id=50 x=31 y=0 width=5 height=7 xoffset=1 yoffset=2 xadvance=6 page=0 chnl=15
+char id=51 x=37 y=0 width=5 height=7 xoffset=1 yoffset=2 xadvance=6 page=0 chnl=15
+char id=52 x=43 y=0 width=6 height=7 xoffset=0 yoffset=2 xadvance=6 page=0 chnl=15
+char id=53 x=50 y=0 width=6 height=7 xoffset=0 yoffset=2 xadvance=6 page=0 chnl=15
+char id=54 x=57 y=0 width=7 height=7 xoffset=0 yoffset=2 xadvance=6 page=0 chnl=15
+char id=55 x=65 y=0 width=5 height=7 xoffset=1 yoffset=2 xadvance=5 page=0 chnl=15
+char id=56 x=71 y=0 width=7 height=7 xoffset=0 yoffset=2 xadvance=6 page=0 chnl=15
+char id=57 x=79 y=0 width=7 height=7 xoffset=0 yoffset=2 xadvance=6 page=0 chnl=15
+char id=32 x=87 y=0 width=0 height=0 xoffset=0 yoffset=0 xadvance=2 page=0 chnl=15
+char id=46 x=88 y=0 width=3 height=2 xoffset=0 yoffset=7 xadvance=3 page=0 chnl=15
+char id=44 x=92 y=0 width=3 height=3 xoffset=0 yoffset=8 xadvance=3 page=0 chnl=15
+char id=45 x=96 y=0 width=3 height=2 xoffset=1 yoffset=6 xadvance=4 page=0 chnl=15

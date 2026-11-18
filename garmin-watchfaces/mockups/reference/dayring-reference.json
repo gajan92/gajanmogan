@@ -1,0 +1,101 @@
+{
+ "issues": [],
+ "boxes": {
+  "date": {
+   "left": 140.5,
+   "right": 249.5,
+   "top": 94,
+   "bottom": 104,
+   "text": "WED 18 NOV",
+   "center": true
+  },
+  "sunset": {
+   "left": 147.6,
+   "right": 242.4,
+   "top": 112,
+   "bottom": 123.5,
+   "text": "16:31SUNSET",
+   "center": true
+  },
+  "time": {
+   "left": 93,
+   "right": 297,
+   "top": 143,
+   "bottom": 190,
+   "text": "10:09",
+   "center": true
+  },
+  "pill": {
+   "left": 128,
+   "right": 262,
+   "top": 209.5,
+   "bottom": 228.5,
+   "text": "EAT IN 1H 51M",
+   "center": true
+  },
+  "km": {
+   "left": 144.9,
+   "right": 188.2,
+   "top": 237.5,
+   "bottom": 246.5,
+   "text": "4.8 KM",
+   "center": false
+  },
+  "kg": {
+   "left": 203,
+   "right": 254.9,
+   "top": 237.5,
+   "bottom": 246.5,
+   "text": "172.8 LB",
+   "center": false
+  },
+  "kcal-l": {
+   "left": 128.2,
+   "right": 149.8,
+   "top": 276.5,
+   "bottom": 282.5,
+   "text": "KCAL",
+   "center": false
+  },
+  "kcal-v": {
+   "left": 125,
+   "right": 153,
+   "top": 287,
+   "bottom": 299,
+   "text": "640",
+   "center": false
+  },
+  "kcal-t": {
+   "left": 128.9,
+   "right": 149.6,
+   "top": 302.5,
+   "bottom": 310.5,
+   "text": "/2,180",
+   "center": false
+  },
+  "wx-v": {
+   "left": 243.6,
+   "right": 264.9,
+   "top": 289.5,
+   "bottom": 300.5,
+   "text": "12°",
+   "center": false
+  },
+  "wx-lo": {
+   "left": 240.8,
+   "right": 248.5,
+   "top": 308.5,
+   "bottom": 315.5,
+   "text": "6°",
+   "center": false
+  },
+  "wx-hi": {
+   "left": 255.3,
+   "right": 265.9,
+   "top": 309,
+   "bottom": 315,
+   "text": "14°",
+   "center": false
+  }
+ }
+}

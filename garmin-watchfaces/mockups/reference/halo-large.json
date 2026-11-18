@@ -1,0 +1,85 @@
+{
+ "issues": [],
+ "boxes": {
+  "eat": {
+   "left": 144.3,
+   "right": 245.7,
+   "top": 91.5,
+   "bottom": 100.5,
+   "text": "EAT IN 1H 51M",
+   "center": true
+  },
+  "date": {
+   "left": 163.4,
+   "right": 226.6,
+   "top": 115.5,
+   "bottom": 128.5,
+   "text": "18WED",
+   "center": true
+  },
+  "time": {
+   "left": 103,
+   "right": 287,
+   "top": 145.8,
+   "bottom": 188.8,
+   "text": "10:09",
+   "center": true
+  },
+  "hrwx": {
+   "left": 99.7,
+   "right": 290.3,
+   "top": 206,
+   "bottom": 222,
+   "text": "188104°H 109°L 99°",
+   "center": true
+  },
+  "s1v": {
+   "left": 122,
+   "right": 148.1,
+   "top": 253.8,
+   "bottom": 262.8,
+   "text": "8,888",
+   "center": false
+  },
+  "s1t": {
+   "left": 126.3,
+   "right": 143.9,
+   "top": 266.8,
+   "bottom": 272.8,
+   "text": "/9999",
+   "center": false
+  },
+  "s2v": {
+   "left": 181.7,
+   "right": 208.8,
+   "top": 254.3,
+   "bottom": 262.3,
+   "text": "99.9K",
+   "center": true
+  },
+  "s2t": {
+   "left": 183.4,
+   "right": 206.6,
+   "top": 266.8,
+   "bottom": 272.8,
+   "text": "STEPS",
+   "center": true
+  },
+  "s3v": {
+   "left": 242.4,
+   "right": 267.6,
+   "top": 254.3,
+   "bottom": 262.3,
+   "text": "100%",
+   "center": false
+  },
+  "s3t": {
+   "left": 242.3,
+   "right": 267.8,
+   "top": 266.8,
+   "bottom": 272.8,
+   "text": "30 DAYS",
+   "center": false
+  }
+ }
+}

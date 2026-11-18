@@ -1,0 +1,25 @@
+<drawables>
+    <bitmap id="heart_12" filename="heart_12.png"/>
+    <bitmap id="sunset_14" filename="sunset_14.png"/>
+    <bitmap id="sunrise_14" filename="sunrise_14.png"/>
+    <bitmap id="halo_head_fast" filename="halo_head_fast.png"/>
+    <bitmap id="halo_head_eat" filename="halo_head_eat.png"/>
+    <bitmap id="wx_clear_14" filename="wx_clear_14.png"/>
+    <bitmap id="wx_clear_10" filename="wx_clear_10.png"/>
+    <bitmap id="wx_clear_night_14" filename="wx_clear_night_14.png"/>
+    <bitmap id="wx_clear_night_10" filename="wx_clear_night_10.png"/>
+    <bitmap id="wx_partly_14" filename="wx_partly_14.png"/>
+    <bitmap id="wx_partly_10" filename="wx_partly_10.png"/>
+    <bitmap id="wx_cloudy_14" filename="wx_cloudy_14.png"/>
+    <bitmap id="wx_cloudy_10" filename="wx_cloudy_10.png"/>
+    <bitmap id="wx_rain_14" filename="wx_rain_14.png"/>
+    <bitmap id="wx_rain_10" filename="wx_rain_10.png"/>
+    <bitmap id="wx_snow_14" filename="wx_snow_14.png"/>
+    <bitmap id="wx_snow_10" filename="wx_snow_10.png"/>
+    <bitmap id="wx_thunder_14" filename="wx_thunder_14.png"/>
+    <bitmap id="wx_thunder_10" filename="wx_thunder_10.png"/>
+    <bitmap id="wx_fog_14" filename="wx_fog_14.png"/>
+    <bitmap id="wx_fog_10" filename="wx_fog_10.png"/>
+    <bitmap id="wx_wind_14" filename="wx_wind_14.png"/>
+    <bitmap id="wx_wind_10" filename="wx_wind_10.png"/>
+</drawables>
