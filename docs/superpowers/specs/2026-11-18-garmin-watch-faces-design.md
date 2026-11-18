@@ -61,8 +61,10 @@ cramped — and that it be **re-checked on every build**, not just once.
 - Food intake / "calories remaining" — a watch face cannot read MyFitnessPal or similar.
 - Other watch models. Vivoactive 6 shares the 390×390 screen, so adding it later should be
   cheap, but it is not built or tested now.
-- Publishing to the Connect IQ Store *(builder's call; side-loading is enough for now —
-  can be revisited)*.
+- Publishing publicly to the Connect IQ Store. *(Builder's note: Garmin Connect only shows
+  settings for apps installed from the store, so each face is uploaded as a **private beta**
+  — visible only to the owner — for the eating-window settings to work. Side-loading over USB
+  works too, but then the faces run on the default 12:00–20:00 window.)*
 - Localised labels: fixed labels (`SUNSET`, `STEPS`, `EAT IN`, …) are English
   *(builder's call)*; day/month names come from the watch's own formatting.
 
@@ -106,7 +108,7 @@ to compile, run the simulator, check alignment, and side-load to the watch.
     Day Ring shows `FASTING 88%` on the track.
   - Colours: orange gradient (`#9A2A03 → #FF6A00 → #FF9F1C → #FFCF7A` on Halo;
     `#B23A06 → #FF7A1A → #FFB347` on Day Ring), glowing head.
-- **Eating state** (now inside the window) — *builder's call, flagged for the owner to check*:
+- **Eating state** (now inside the window) — *proposed by the builder, approved by the owner*:
   - Label: `FAST IN 3H 10M` (time until `E1`).
   - Day Ring: the dotted eating-window segment fills in solid cream `#F2E3C6` up to "now";
     the orange fast track shows empty.
