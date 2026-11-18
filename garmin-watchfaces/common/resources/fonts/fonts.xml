@@ -1,0 +1,21 @@
+<fonts>
+    <font id="TIME_DR" filename="time_dr.fnt" antialias="true"/>
+    <font id="TIME_DR_AOD" filename="time_dr_aod.fnt" antialias="true"/>
+    <font id="TIME_HA" filename="time_ha.fnt" antialias="true"/>
+    <font id="TIME_HA_AOD" filename="time_ha_aod.fnt" antialias="true"/>
+    <font id="DR_DATE" filename="dr_date.fnt" antialias="true"/>
+    <font id="DR_SUNTIME" filename="dr_suntime.fnt" antialias="true"/>
+    <font id="DR_SUNLABEL" filename="dr_sunlabel.fnt" antialias="true"/>
+    <font id="DR_PILL" filename="dr_pill.fnt" antialias="true"/>
+    <font id="DR_KMLB" filename="dr_kmlb.fnt" antialias="true"/>
+    <font id="DR_SUBVAL" filename="dr_subval.fnt" antialias="true"/>
+    <font id="DR_SUBSMALL" filename="dr_subsmall.fnt" antialias="true"/>
+    <font id="DR_KCAL" filename="dr_kcal.fnt" antialias="true"/>
+    <font id="DR_WXLOHI" filename="dr_wxlohi.fnt" antialias="true"/>
+    <font id="HA_B11" filename="ha_b11.fnt" antialias="true"/>
+    <font id="HA_B15" filename="ha_b15.fnt" antialias="true"/>
+    <font id="HA_DAY" filename="ha_day.fnt" antialias="true"/>
+    <font id="HA_SUBLABEL" filename="ha_sublabel.fnt" antialias="true"/>
+    <font id="HA_SUBTOTAL" filename="ha_subtotal.fnt" antialias="true"/>
+    <font id="HA_WXHL" filename="ha_wxhl.fnt" antialias="true"/>
+</fonts>
