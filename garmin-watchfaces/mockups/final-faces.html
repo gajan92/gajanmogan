@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day Ring and Halo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f2f2f0; --fg:#1a1a1a; --muted:#5f5f5f; --card:#fff; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#121212; --fg:#eee; --muted:#a0a0a0; --card:#1c1c1c; } }
+  :root[data-theme="dark"] { --bg:#121212; --fg:#eee; --muted:#a0a0a0; --card:#1c1c1c; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:Inter,system-ui,sans-serif; padding:24px 16px 48px; }
+  h1 { font-weight:600; font-size:22px; margin:0 0 6px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:22px; max-width:900px; margin-top:20px; }
+  .card { background:var(--card); border-radius:18px; padding:24px; display:flex; flex-direction:column; align-items:center; }
+  .watch { width:100%; max-width:400px; aspect-ratio:1; border-radius:50%; background:#000; box-shadow:0 0 0 10px #262626, 0 0 0 12px #4a4a4a, 0 10px 34px rgba(0,0,0,.4); overflow:hidden; }
+  .watch svg { width:100%; height:100%; display:block; }
+  .label { margin-top:24px; font-weight:700; font-size:18px; align-self:flex-start; }
+</style>
+</head>
+<body>
+<h1>Day Ring and Halo, with Orbitron two-tone time</h1>
+<div class="grid" id="grid"></div>
+
+<script>
+const C = 195;
+const COL = { hr:"#FF4D4D", steps:"#3DD6F5", fast:"#FF9F1C", batt:"#4CD964", wx:"#FFD60A", kcal:"#FF5FA2", sun:"#FFC247" };
+let uid = 0;
+
+// ---------- geometry ----------
+function ptC(cx,cy,r,f){ const a=f*2*Math.PI-Math.PI/2; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
+const pt=(r,f)=>ptC(C,C,r,f);
+function arcC(cx,cy,r,f0,f1){ const [x0,y0]=ptC(cx,cy,r,f0),[x1,y1]=ptC(cx,cy,r,f1); const L=(f1-f0)>.5?1:0; return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${L} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`; }
+const arc=(r,f0,f1)=>arcC(C,C,r,f0,f1);
+function arcCCW(r,f0,f1){ const [x0,y0]=pt(r,f0),[x1,y1]=pt(r,f1); const L=(f0-f1)>.5?1:0; return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${L} 0 ${x1.toFixed(2)} ${y1.toFixed(2)}`; }
+function hex(c){ const n=parseInt(c.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+function lerp(a,b,t){ const A=hex(a),B=hex(b); return `rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(",")})`; }
+function multi(cols,t){ if(cols.length===1) return cols[0]; const s=Math.max(0,Math.min(1,t))*(cols.length-1); const i=Math.min(Math.floor(s),cols.length-2); return lerp(cols[i],cols[i+1],s-i); }
+function gradArcC(cx,cy,r,f0,f1,cols,w,cap=true){
+  const n=Math.max(10,Math.ceil(Math.abs(f1-f0)*260)); let s="";
+  for(let i=0;i<n;i++){ const a=f0+(f1-f0)*i/n, b=f0+(f1-f0)*(i+1)/n+(i<n-1?.0015:0);
+    s+=`<path d="${arcC(cx,cy,r,a,b)}" stroke="${multi(cols,(i+.5)/n)}" stroke-width="${w}" fill="none"/>`; }
+  if(cap){ const [x0,y0]=ptC(cx,cy,r,f0),[x1,y1]=ptC(cx,cy,r,f1);
+    s+=`<circle cx="${x0}" cy="${y0}" r="${w/2}" fill="${multi(cols,0)}"/><circle cx="${x1}" cy="${y1}" r="${w/2}" fill="${multi(cols,1)}"/>`; }
+  return s;
+}
+const gradArc=(r,f0,f1,cols,w,cap)=>gradArcC(C,C,r,f0,f1,cols,w,cap);
+function track(r,f0,f1,col,w){ return `<path d="${arc(r,f0,f1)}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`; }
+function ticks(r0,r1,f0,f1,n,col,w=1,majorEvery=0,majorCol="#aaa",majorW=1.6){
+  let s=""; for(let i=0;i<=n;i++){ const f=f0+(f1-f0)*i/n; const M=majorEvery&&i%majorEvery===0; const [x0,y0]=pt(r0,f),[x1,y1]=pt(M?r1+2:r1,f);
+    s+=`<line x1="${x0.toFixed(2)}" y1="${y0.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y1.toFixed(2)}" stroke="${M?majorCol:col}" stroke-width="${M?majorW:w}"/>`; } return s;
+}
+
+// ---------- text helpers (positions are finalised by layout() after fonts load) ----------
+// vertically centred text: ink is centred on cy; horizontally centred on cx
+function vt(cx,cy,s,o={}){
+  return `<text class="vc" data-cx="${cx}" data-cy="${cy}" data-a="${o.a||'middle'}"${o.id?` data-audit="${o.id}"`:''}${o.center?' data-center="1"':''}${o.deg?' data-deg="1"':''} x="${cx}" y="${cy}" text-anchor="${o.deg?'start':(o.a||'middle')}" fill="${o.f||'#fff'}" font-family="${o.ff||'Inter'}" font-weight="${o.w||400}" font-size="${o.s||14}" letter-spacing="${o.ls||0}">${s}</text>`;
+}
+let pid=0;
+function ct(r,f,s,o={}){
+  const id="cp"+(pid++), span=o.span||.2, bottom=f>.25&&f<.75;
+  const d=bottom?arcCCW(r,f+span,f-span):arc(r,f-span,f+span);
+  return `<defs><path id="${id}" d="${d}"/></defs><text fill="${o.f||'#fff'}" font-family="Inter" font-weight="${o.w||600}" font-size="${o.s||10}" letter-spacing="${o.ls??1.2}"><textPath href="#${id}" startOffset="50%" text-anchor="middle">${s}</textPath></text>`;
+}
+function ctAt(r,f,s,anchor,offPx,o={}){
+  const id="cp"+(pid++), span=o.span||.2, bottom=f>.25&&f<.75;
+  const d=bottom?arcCCW(r,f+span,f-span):arc(r,f-span,f+span);
+  const len=r*2*Math.PI*2*span, ls=o.ls??1.2;
+  const off=len/2+offPx+(anchor==="end"?ls:0); // end-anchored text carries trailing letter-spacing
+  return `<defs><path id="${id}" d="${d}"/></defs><text fill="${o.f||'#fff'}" font-family="Inter" font-weight="${o.w||600}" font-size="${o.s||10}" letter-spacing="${ls}"><textPath href="#${id}" startOffset="${off.toFixed(2)}" text-anchor="${anchor}">${s}</textPath></text>`;
+}
+// icons, drawn with their own centre at (cx,cy)
+function heart(cx,cy,c,sz=12){ const s=sz/12; return `<path transform="translate(${cx-6*s} ${cy-5.5*s}) scale(${s})" d="M6 11 C2 8 0 6 0 3.5 C0 1.5 1.5 0 3.3 0 C4.5 0 5.4 .7 6 1.6 C6.6 .7 7.5 0 8.7 0 C10.5 0 12 1.5 12 3.5 C12 6 10 8 6 11Z" fill="${c}"/>`; }
+function sunsetIcon(cx,cy,c){ return `<g transform="translate(${cx-7} ${cy-6})" stroke="${c}" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M2 9 A5 5 0 0 1 12 9"/><line x1="0" y1="11.5" x2="14" y2="11.5"/><path d="M7 0 V4 M5 2.5 L7 4.5 L9 2.5"/></g>`; }
+function sunIcon(cx,cy,c,sc=1){ let g=`<g transform="translate(${cx} ${cy}) scale(${sc})" stroke="${c}" stroke-width="1.5" stroke-linecap="round" fill="none"><circle cx="0" cy="0" r="3"/>`; for(let i=0;i<8;i++){const a=i*Math.PI/4; g+=`<line x1="${(5*Math.cos(a)).toFixed(2)}" y1="${(5*Math.sin(a)).toFixed(2)}" x2="${(6.8*Math.cos(a)).toFixed(2)}" y2="${(6.8*Math.sin(a)).toFixed(2)}"/>`;} return g+`</g>`; }
+// a horizontal row of items, centred as a whole on cx (or right/left aligned to x)
+function row(id, mode, x, inner){ return `<g class="row" data-mode="${mode}" data-x="${x}" data-audit="${id}">${inner}</g>`; }
+const GLOW = id=>`<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+
+// time: Orbitron two-tone, scaled to width, centred between two neighbours
+function timeEl(width, above, below){
+  return `<text class="time" data-w="${width}" data-above="${above}" data-below="${below}" data-audit="time" data-center="1" x="${C}" y="${C}" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="60"><tspan fill="#fff">10</tspan><tspan fill="#FF9F1C">:09</tspan></text>`;
+}
+
+// subdial: ticks sit OUTSIDE the progress ring so the centre is free for text
+function subdial(cx,cy,r,f0,f1,frac,cols,trk,w=4,tickCount=36){
+  const disc=r+w/2+5;
+  let s=`<circle cx="${cx}" cy="${cy}" r="${disc}" fill="#070707" stroke="#1f1f1f" stroke-width="1"/>`;
+  const n=Math.round(tickCount*(f1-f0));
+  for(let i=0;i<=n;i++){ const f=f0+(f1-f0)*i/n; if(f1-f0===1&&i===n) continue; const M=i%3===0;
+    const [x0,y0]=ptC(cx,cy,r+w/2+1.2,f),[x1,y1]=ptC(cx,cy,r+w/2+(M?4:2.8),f);
+    s+=`<line x1="${x0.toFixed(2)}" y1="${y0.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y1.toFixed(2)}" stroke="${M?'#5a5a5a':'#303030'}" stroke-width="${M?1.1:.8}"/>`; }
+  s+=`<path d="${arcC(cx,cy,r,f0,f1)}" stroke="${trk}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+  if(cols.length) s+=gradArcC(cx,cy,r,f0,f0+(f1-f0)*frac,cols,w);
+  return s;
+}
+
+// ============ DAY RING ============
+function dayF(h){ return (((h-12)/24)%1+1)%1; }
+function dayRing(){
+  const rise=7+41/60, set=16+31/60, now=10+9/60;
+  const fRise=dayF(rise), fSet=dayF(set)+1, fNow=dayF(now);
+  const G="g"+(uid++);
+  let s=`<defs>${GLOW(G)}</defs>`;
+  // 24h band
+  s+=gradArc(180,fSet-1,fRise,["#3448b0","#141f63","#0b1240","#141f63","#3448b0"],16,false);
+  s+=gradArc(180,fRise,fSet,["#5a4210","#b8862a","#e0b04a","#b8862a","#5a4210"],16,false);
+  for(let h=0;h<24;h++){ if(h%3===0) continue; const f=dayF(h); const [x0,y0]=pt(172,f),[x1,y1]=pt(188,f); s+=`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#000" stroke-width="1.4"/>`; }
+  for(let h=0;h<24;h+=3){ const f=dayF(h), bottom=f>.25&&f<.75; s+=ct(bottom?183.3:176.7,f,String(h).padStart(2,"0"),{s:9,w:800,f:"rgba(255,255,255,.9)",ls:0,span:.06}); }
+  for(const f of [fRise,fSet]){ const [x,y]=pt(180,f); s+=`<circle cx="${x}" cy="${y}" r="4.2" fill="${COL.sun}" stroke="#000" stroke-width="1.6"/>`; }
+  // fasting track
+  const fFS=dayF(20);
+  s+=track(165,fFS,1,"#3a2307",5);
+  s+=`<path d="${arc(165,0,fFS)}" stroke="#d8d8d8" stroke-width="2.6" stroke-dasharray="0.1 6" stroke-linecap="round" fill="none"/>`;
+  s+=`<g filter="url(#${G})">${gradArc(165,fFS,fNow,["#b23a06","#FF7A1A","#FFB347"],5)}</g>`;
+  s+=ct(153,fFS/2,"EAT 12–20",{s:7.5,f:"#bdbdbd",span:.08});
+  s+=ct(158.5,.6,"FASTING 88%",{s:7.5,f:COL.fast,span:.1});
+  { const [x0,y0]=pt(158,fNow),[x1,y1]=pt(191,fNow); s+=`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#fff" stroke-width="2.4" stroke-linecap="round" filter="url(#${G})"/>`;
+    const [hx,hy]=pt(165,fNow); s+=`<circle cx="${hx}" cy="${hy}" r="5" fill="#fff" stroke="#000" stroke-width="2"/>`; }
+  // inner gauges (mirror-symmetric: steps .11-.33, HR .67-.89, battery centred on 0)
+  s+=ticks(141,144,-.07,.07,10,"#383838",1,5,"#777");
+  s+=track(134,-.07,.07,"#11331b",7)+gradArc(134,-.07,-.07+.14*.82,["#1d7d36","#4CD964"],7);
+  s+=ct(119.5,0,"82% · 6 DAYS",{s:8.5,f:COL.batt,span:.12});
+  s+=ticks(141,144,.11,.33,10,"#383838",1,5,"#777");
+  s+=track(134,.11,.33,"#0a2a33",7)+gradArc(134,.11,.11+.22*.64,["#1f5fff","#3DD6F5"],7);
+  { const [x,y]=pt(134,.11+.22*.64); s+=`<circle cx="${x}" cy="${y}" r="2" fill="#fff"/>`; }
+  s+=ct(119.5,.22,"6,412 / 10K STEPS",{s:8.5,f:COL.steps,span:.14});
+  s+=ticks(141,144,.67,.89,10,"#383838",1,5,"#777");
+  s+=gradArc(134,.67,.89,["#3d7bff","#4CD964","#FFD60A","#FF9F1C","#FF3B30"],7);
+  { const f=.67+.22*((64-40)/150); const [x,y]=pt(134,f); s+=`<circle cx="${x}" cy="${y}" r="6.5" fill="#fff" stroke="#000" stroke-width="2.4" filter="url(#${G})"/>`; }
+  s+=ct(119.5,.78,"♥ 64 BPM",{s:8.5,f:COL.hr,span:.1});
+  // centre column
+  s+=vt(C,99,"WED 18 NOV",{s:12,w:700,f:"#e6e6e6",ls:3.5,id:"date",center:1});
+  s+=row("sunset","center",C, sunsetIcon(7,0,COL.sun)+vt(20,0,"16:31",{a:"start",s:11.5,w:600,f:COL.sun})+vt(55,0,"SUNSET",{a:"start",s:8,w:600,f:"#8a7440",ls:1.2})).replace('data-x="'+C+'"','data-x="'+C+'" data-y="118"');
+  s+=timeEl(204,"sunset","pill");
+  s+=`<g data-audit="pill" data-center="1"><rect x="${C-67}" y="${219-9.5}" width="134" height="19" rx="9.5" fill="#1f1406" stroke="#4a2c08" stroke-width="1"/>`+vt(C,219,"EAT IN 1H 51M",{s:10.5,w:700,f:COL.fast,ls:1.6})+`</g>`;
+  s+=vt(C-8+1.2,242,"4.8 KM",{a:"end",s:10.5,w:600,ls:1.2,f:"#cfcfcf",id:"km"})+`<circle cx="${C}" cy="242" r="1.6" fill="#555"/>`+vt(C+8,242,"172.8 LB",{a:"start",s:10.5,w:600,ls:1.2,f:"#9a9a9a",id:"kg"});
+  // subdials, mirrored about the centre line
+  const sy=293, dx=56;
+  s+=subdial(C-dx,sy,26,0,1,640/2180,["#a3164f","#FF5FA2"],"#2a0f1d",4);
+  s+=`<g data-dial="${C-dx},${sy},24" data-items="kcal-l kcal-v kcal-t"/><g data-dial="${C+dx},${sy},24" data-items="wx-v"/>`;
+  s+=vt(C-dx,sy-13.5,"KCAL",{s:6.5,w:700,f:"#8a8a8a",ls:1,id:"kcal-l"})+vt(C-dx,sy,"640",{s:14,w:700,f:COL.kcal,id:"kcal-v"})+vt(C-dx,sy+13.5,"/2,180",{s:7,w:500,f:"#8a8a8a",id:"kcal-t"});
+  s+=subdial(C+dx,sy,26,.625,1.375,0,[],"#000",4,36);
+  s+=gradArcC(C+dx,sy,26,.625,1.375,["#3DA5FF","#4CD964","#FFD60A"],4);
+  { const f=.625+.75*((12-6)/8); const [x,y]=ptC(C+dx,sy,26,f); s+=`<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="#000" stroke-width="1.6"/>`; }
+  s+=sunIcon(C+dx,sy-12,COL.wx,.72)+vt(C+dx,sy+2,`12<tspan>°</tspan>`,{s:14,w:700,f:COL.wx,deg:1,id:"wx-v"});
+  s+=vt(C+dx-8,sy+19,`6<tspan>°</tspan>`,{s:7,w:600,f:"#8a8a8a",deg:1,id:"wx-lo"})+vt(C+dx+8,sy+19,`14<tspan>°</tspan>`,{s:7,w:600,f:"#8a8a8a",deg:1,id:"wx-hi"});
+  return s;
+}
+
+// ============ HALO ============
+function halo(){
+  const ff=14.15/16, G="g"+(uid++);
+  let s=`<defs>${GLOW(G)}<filter id="${G}b" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter></defs>`;
+  for(let r=8;r<=122;r+=4.5) s+=`<circle cx="${C}" cy="${C}" r="${r}" fill="none" stroke="#111113" stroke-width=".8"/>`;
+  s+=`<circle cx="${C}" cy="${C}" r="189.5" fill="none" stroke="#1c1c1c" stroke-width="1"/>`;
+  for(let i=0;i<60;i++){ const M=i%5===0; const [x0,y0]=pt(M?179:182.5,i/60),[x1,y1]=pt(188,i/60);
+    s+=`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${M?'#bdbdbd':'#4a4a4a'}" stroke-width="${M?2:1}"/>`; }
+  for(let h=1;h<=12;h++){ const [x,y]=pt(167,h/12); s+=vt(x.toFixed(2),y.toFixed(2),h,{s:h%3===0?12:10.5,w:h%3===0?600:400,f:h===12?'#d0d0d0':'#6e6e6e'}); }
+  s+=ticks(139.5,143.5,0,1,16,"#3a3a3a",1.1,4,"#7a7a7a",1.6);
+  s+=`<circle cx="${C}" cy="${C}" r="130" fill="none" stroke="#1d1306" stroke-width="9"/>`;
+  s+=`<g filter="url(#${G}b)" opacity=".55">${gradArc(130,0,ff,["#7a1f00","#FF6A00","#FFB347"],10)}</g>`;
+  s+=gradArc(130,0,ff,["#9a2a03","#FF6A00","#FF9F1C","#FFCF7A"],9);
+  { const [x,y]=pt(130,0); s+=`<rect x="${x-2}" y="${y-8}" width="4" height="16" rx="2" fill="#fff"/>`; }
+  { const [x,y]=pt(130,ff); s+=`<circle cx="${x}" cy="${y}" r="9" fill="#FFE6BF" filter="url(#${G})"/><circle cx="${x}" cy="${y}" r="3.2" fill="#FF7A1A"/>`; }
+  s+=ct(148,.865,"FASTING · 14H 09M / 16H",{s:8.5,f:COL.fast,span:.16});
+  s+=ct(148,.135,"☀ SUNSET 16:31",{s:8.5,f:COL.sun,span:.12});
+  s+=ctAt(157,.5,"4.8 KM","end",-8,{s:8.5,f:"#a5a5a5",span:.14})+ctAt(157,.5,"·","middle",0,{s:8.5,f:"#a5a5a5",span:.14,ls:0})+ctAt(157,.5,"172.8 LB","start",8,{s:8.5,f:"#a5a5a5",span:.14});
+  // centre column
+  s+=vt(C,96,"EAT IN 1H 51M",{s:11,w:700,f:COL.fast,ls:2,id:"eat",center:1});
+  s+=vt(C,122,`<tspan fill="#fff" font-weight="700">18</tspan><tspan fill="#8a8a8a" font-weight="500" dx="6" letter-spacing="2">WED</tspan>`,{s:15,id:"date",center:1});
+  s+=timeEl(184,"date","hrwx");
+  // HR + weather row: left block right-aligned to the divider, right block left-aligned
+  const ry=214;
+  const hrs=[72,70,68,66,65,63,62,64,70,84,93,88,77,71,68,66,64,63,66,68,65,62,63,64];
+  const sw=34, sh=16, mn=58, mx=96; let d="";
+  hrs.forEach((v,i)=>{ const x=50+sw*i/(hrs.length-1), y=sh/2-sh*(v-mn)/(mx-mn); d+=(i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1)+" "; });
+  const lastY=sh/2-sh*(64-mn)/(mx-mn);
+  let hrRow=heart(6,0,COL.hr)+vt(17,0,"64",{a:"start",s:15,w:700,f:COL.hr})+`<path d="${d}" fill="none" stroke="${COL.hr}" stroke-width="1.3" stroke-linejoin="round" opacity=".85"/><circle cx="${50+sw}" cy="${lastY}" r="2" fill="#fff"/>`;
+  s+=`<g class="cgroup" data-audit="hrwx" data-center="1">`;
+  s+=row("hr","right",C-9,hrRow).replace('data-x="'+(C-9)+'"','data-x="'+(C-9)+'" data-y="'+ry+'"').replace(' data-audit="hr"','');
+  s+=`<line x1="${C}" y1="${ry-8}" x2="${C}" y2="${ry+8}" stroke="#2a2a2a"/>`;
+  let wxRow=sunIcon(7,0,COL.wx)+vt(20,0,`12<tspan>°</tspan>`,{a:"start",s:15,w:700,f:COL.wx})+vt(50,-4.5,"H 14°",{a:"start",s:7.5,w:600,f:"#8a8a8a"})+vt(50,4.5,"L 6°",{a:"start",s:7.5,w:600,f:"#8a8a8a"});
+  s+=row("wx","left",C+9,wxRow).replace('data-x="'+(C+9)+'"','data-x="'+(C+9)+'" data-y="'+ry+'"').replace(' data-audit="wx"','');
+  s+=`</g>`;
+  // three equal subdials on one line, mirrored about the centre
+  const sy=263, dx=60, r=19.5;
+  for(const [x,ids] of [[C-dx,"s1v s1t"],[C,"s2v s2t"],[C+dx,"s3v s3t"]]) s+=`<g data-dial="${x},${sy},${r-1.75}" data-items="${ids}"/>`;
+  s+=subdial(C-dx,sy,r,0,1,640/2180,["#a3164f","#FF5FA2"],"#2a0f1d",3.5);
+  s+=vt(C-dx,sy-4.75,"640",{s:11,w:700,f:COL.kcal,id:"s1v"})+vt(C-dx,sy+6.75,"/2180",{s:6,w:500,f:"#8a8a8a",id:"s1t"});
+  s+=subdial(C,sy,r,0,1,.64,["#1f5fff","#3DD6F5"],"#0a2a33",3.5);
+  s+=vt(C,sy-4.75,"6.4K",{s:11,w:700,f:COL.steps,id:"s2v",center:1})+vt(C,sy+6.75,"STEPS",{s:6,w:600,f:"#8a8a8a",ls:.8,id:"s2t",center:1});
+  s+=subdial(C+dx,sy,r,0,1,.82,["#1d7d36","#4CD964"],"#11331b",3.5);
+  s+=vt(C+dx,sy-4.75,"82%",{s:11,w:700,f:COL.batt,id:"s3v"})+vt(C+dx,sy+6.75,"6 DAYS",{s:6,w:600,f:"#8a8a8a",ls:.5,id:"s3t"});
+  return s;
+}
+
+const faces=[{name:"Day Ring", svg:dayRing()},{name:"Halo", svg:halo()}];
+const grid=document.getElementById("grid");
+for(const f of faces){ const el=document.createElement("div"); el.className="card";
+  el.innerHTML=`<div class="watch"><svg viewBox="0 0 390 390" data-face="${f.name}">${f.svg}</svg></div><div class="label">${f.name}</div>`; grid.appendChild(el); }
+
+// ---------- layout pass: measure real glyph ink and position precisely ----------
+const cv=document.createElement("canvas").getContext("2d");
+function ink(el, str){ // ascent/descent of the actual glyphs at the element's font
+  const cs=getComputedStyle(el); cv.font=`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const m=cv.measureText(str); return {asc:m.actualBoundingBoxAscent, desc:m.actualBoundingBoxDescent};
+}
+function layout(svg){
+  // 1. vertically centred texts
+  for(const el of svg.querySelectorAll("text.vc")){
+    const cy=+el.dataset.cy, cx=+el.dataset.cx, {asc,desc}=ink(el, el.textContent);
+    el.setAttribute("y",(cy+(asc-desc)/2).toFixed(2));
+    if(el.dataset.deg){ // centre the digits; let the degree sign hang to the right
+      const n=el.textContent.length; const digits=el.getSubStringLength(0,n-1);
+      const a=el.dataset.a; el.setAttribute("x",(a==="start"?cx:cx-digits/2).toFixed(2));
+    }
+  }
+  // 2. rows: place group, then align horizontally using its real bbox
+  for(const g of svg.querySelectorAll("g.row")){
+    const x=+g.dataset.x, y=+g.dataset.y; g.setAttribute("transform",`translate(0 ${y})`);
+    const bb=g.getBBox(); let tx;
+    if(g.dataset.mode==="center") tx=x-(bb.x+bb.width/2);
+    else if(g.dataset.mode==="right") tx=x-(bb.x+bb.width);
+    else tx=x-bb.x;
+    g.setAttribute("transform",`translate(${tx.toFixed(2)} ${y})`);
+  }
+  // 2b. centre composite groups as a whole
+  for(const g of svg.querySelectorAll("g.cgroup")){ const bb=g.getBBox(); g.setAttribute("transform",`translate(${(C-(bb.x+bb.width/2)).toFixed(2)} 0)`); }
+  // 3. time: scale to target width, then centre its ink exactly between its neighbours
+  for(const el of svg.querySelectorAll("text.time")){
+    const len=el.getComputedTextLength(); const fs=60*(+el.dataset.w)/len; el.setAttribute("font-size",fs.toFixed(2));
+    const box=id=>{ const n=svg.querySelector(`[data-audit="${id}"]`); const b=n.getBBox(); const m=n.getCTM? n.transform.baseVal.consolidate():null; const ty=m?m.matrix.f:0; return {top:b.y+ty, bottom:b.y+b.height+ty}; };
+    const above=svg.querySelector(`[data-audit="${el.dataset.above}"]`), below=svg.querySelector(`[data-audit="${el.dataset.below}"]`);
+    const inkBox=n=>inkBounds(n);
+    const a=inkBox(above), b=inkBox(below);
+    const mid=(a.bottom+b.top)/2; const {asc,desc}=ink(el,"10:09");
+    el.setAttribute("y",(mid+(asc-desc)/2).toFixed(2));
+  }
+}
+// ink bounds of an audited node (text: real glyph ink; groups: union of children)
+function inkBounds(n){
+  if(n.tagName==="text"){
+    const {asc,desc}=ink(n,n.textContent); const y=+n.getAttribute("y"); const bb=n.getBBox();
+    const t=n.parentNode.transform&&n.parentNode.transform.baseVal.consolidate(); const ox=t?t.matrix.e:0, oy=t?t.matrix.f:0;
+    return {left:bb.x+ox, right:bb.x+bb.width+ox, top:y-asc+oy, bottom:y+desc+oy};
+  }
+  const t=n.transform&&n.transform.baseVal.consolidate(); const ox=t?t.matrix.e:0, oy=t?t.matrix.f:0;
+  let L=1e9,R=-1e9,T=1e9,B=-1e9;
+  for(const ch of n.children){
+    let b; if(ch.tagName==="text"){ const {asc,desc}=ink(ch,ch.textContent); const y=+ch.getAttribute("y"); const bb=ch.getBBox(); b={left:bb.x,right:bb.x+bb.width,top:y-asc,bottom:y+desc}; }
+    else if(ch.tagName==="g" && ch.querySelector("text")){ b=inkBounds(ch); }
+    else { const bb=ch.getBBox(); b={left:bb.x,right:bb.x+bb.width,top:bb.y,bottom:bb.y+bb.height}; const tt=ch.transform&&ch.transform.baseVal.consolidate(); if(tt){ b.left=tt.matrix.a*bb.x+tt.matrix.e; b.right=tt.matrix.a*(bb.x+bb.width)+tt.matrix.e; b.top=tt.matrix.d*bb.y+tt.matrix.f; b.bottom=tt.matrix.d*(bb.y+bb.height)+tt.matrix.f; } }
+    L=Math.min(L,b.left);R=Math.max(R,b.right);T=Math.min(T,b.top);B=Math.max(B,b.bottom);
+  }
+  return {left:L+ox,right:R+ox,top:T+oy,bottom:B+oy};
+}
+// ---------- audit: centring, overlaps, edge clearance ----------
+function audit(svg){
+  const out=[]; const items=[...svg.querySelectorAll("[data-audit]")].map(n=>({id:n.dataset.audit,n,b:inkBounds(n),center:!!n.dataset.center}));
+  for(const it of items){ if(it.center){ const off=((it.b.left+it.b.right)/2-C); if(Math.abs(off)>0.75) out.push(`OFF-CENTRE ${it.id}: ${off.toFixed(2)}px`); } }
+  for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){ const a=items[i].b,b=items[j].b;
+    const ox=Math.min(a.right,b.right)-Math.max(a.left,b.left), oy=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+    if(ox>-2&&oy>-2) out.push(`TOO CLOSE ${items[i].id} / ${items[j].id}: overlap x ${ox.toFixed(1)}, y ${oy.toFixed(1)}`); }
+  for(const it of items){ for(const [x,y] of [[it.b.left,it.b.top],[it.b.right,it.b.top],[it.b.left,it.b.bottom],[it.b.right,it.b.bottom]]){ const r=Math.hypot(x-C,y-C); if(r>118 && !it.id.startsWith("s")&&!it.id.startsWith("kcal")&&!it.id.startsWith("wx")) { out.push(`NEAR RING ${it.id}: corner at r=${r.toFixed(1)}`); break; } } }
+  for(const d of svg.querySelectorAll("[data-dial]")){ const [cx,cy,rin]=d.dataset.dial.split(",").map(Number);
+    for(const id of d.dataset.items.split(" ")){ const it=items.find(i=>i.id===id); if(!it) continue; const b=it.b;
+      for(const [x,y] of [[b.left,b.top],[b.right,b.top],[b.left,b.bottom],[b.right,b.bottom]]){ const r=Math.hypot(x-cx,y-cy); if(r>rin-1){ out.push(`TOUCHES DIAL ${id}: corner r=${r.toFixed(1)} vs free radius ${rin}`); break; } } } }
+  return {issues:out, boxes:Object.fromEntries(items.map(i=>[i.id,Object.fromEntries(Object.entries(i.b).map(([k,v])=>[k,+v.toFixed(1)]))]))};
+}
+window.AUDIT=null;
+Promise.all(["900 20px Orbitron","400 20px Inter","500 20px Inter","600 20px Inter","700 20px Inter","800 20px Inter"].map(f=>document.fonts.load(f))).then(()=>{
+  const res={};
+  for(const svg of document.querySelectorAll("svg[data-face]")){ layout(svg); res[svg.dataset.face]=audit(svg); }
+  window.AUDIT=res;
+});
+</script>
+</body>
+</html>
