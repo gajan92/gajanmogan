@@ -1,0 +1,5 @@
+<drawables>
+    <bitmap id="atlas_arc75" filename="atlas_arc75.png"/>
+    <bitmap id="atlas_arc85" filename="atlas_arc85.png"/>
+    <bitmap id="atlas_arc9" filename="atlas_arc9.png"/>
+</drawables>
